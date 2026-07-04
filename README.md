@@ -1,1 +1,1 @@
-HODL some USDC or just store it for a while
+HODL USDC to buy what you want in future.
