@@ -1,0 +1,2469 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<title>Polygon USDC Time-Lock</title>
+<link rel="manifest" href="manifest.json"/>
+<link rel="icon" type="image/png" sizes="32x32" href="icon-32.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+<link rel="apple-touch-icon" sizes="192x192" href="icon-192.png"/>
+<meta name="theme-color" content="#f2f2f7"/>
+<script>
+(function(){
+  var saved=null;
+  try{ saved=localStorage.getItem('theme'); }catch(e){}
+  var theme = saved || ((window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+})();
+</script>
+<style>
+@font-face{
+  font-family:'AppFont';
+  src:url('font.ttf') format('truetype');
+  font-weight:100 900;
+  font-display:swap;
+}
+:root{
+  --bg:#f2f2f7;--surface:#ffffff;--card:#ffffff;--card2:#f9f9fb;
+  --border:#e5e5ea;--border2:#d1d1d6;
+  --poly:#8247e5;--poly2:#6b35c9;
+  --usdt:#2775ca;--usdt2:#1a5fa0;
+  --accent:#007aff;--accent2:#0a84ff;
+  --gold:#ff9500;--gold2:#d97706;
+  --text:#1c1c1e;--muted:#8e8e93;--muted2:#636366;
+  --danger:#ff3b30;--success:#34c759;--warn:#ff9500;
+  --purple:#af52de;--purple2:#7c3aed;
+  --header-bg:rgba(242,242,247,.95);
+  --alert-success-text:#1f8a3d;--alert-warn-text:#b96400;
+  --safe-top:env(safe-area-inset-top);
+  --safe-bottom:env(safe-area-inset-bottom);
+  --safe-left:env(safe-area-inset-left);
+  --safe-right:env(safe-area-inset-right);
+}
+:root[data-theme="dark"]{
+  --bg:#0b0b0d;--surface:#1c1c1e;--card:#1e1e20;--card2:#26262a;
+  --border:#3a3a3d;--border2:#4a4a4d;
+  --poly:#9d6bef;--poly2:#8247e5;
+  --usdt:#4a9bf0;--usdt2:#2775ca;
+  --accent:#0a84ff;--accent2:#409cff;
+  --gold:#ff9f0a;--gold2:#ff9500;
+  --text:#f2f2f7;--muted:#98989d;--muted2:#8e8e93;
+  --danger:#ff453a;--success:#30d158;--warn:#ff9f0a;
+  --purple:#bf5af2;--purple2:#af52de;
+  --header-bg:rgba(28,28,30,.85);
+  --alert-success-text:#4ade80;--alert-warn-text:#ffb340;
+}
+html,body,.card,.tabs,header,.net-toggle,.mini-tabs{transition:background-color .25s ease,color .25s ease,border-color .25s ease}
+.theme-toggle{
+  flex-shrink:0;margin:0 3px;
+  width:30px;height:30px;border-radius:50%;
+  background:var(--card2);border:1px solid var(--border);
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;z-index:2;padding:0;
+}
+.theme-toggle svg{width:16px;height:16px;stroke:var(--text)}
+.theme-toggle .icon-moon{display:none}
+[data-theme="dark"] .theme-toggle .icon-sun{display:none}
+[data-theme="dark"] .theme-toggle .icon-moon{display:block}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{height:100%}
+body{
+  background:var(--bg);color:var(--text);
+  font-family:'AppFont','SF Pro Text',-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  min-height:100vh;min-height:100dvh;direction:rtl;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior-y:none;
+  padding-bottom:var(--safe-bottom);
+  padding-left:var(--safe-left);
+  padding-right:var(--safe-right);
+}
+
+/* BANNER IMAGE */
+.app-banner{
+  width:100%;
+  display:block;
+  position:relative;
+  padding:calc(10px + var(--safe-top)) 12px 0;
+}
+.app-banner img{
+  width:100%;
+  height:110px;
+  object-fit:cover;
+  display:block;
+  border-radius:16px;
+}
+.app-banner.hidden{display:none}
+.app-banner.app-banner-bottom{padding:12px 4px 0}
+
+/* HEADER */
+header{
+  background:var(--header-bg,rgba(242,242,247,.95));
+  -webkit-backdrop-filter:saturate(180%) blur(20px);
+  backdrop-filter:saturate(180%) blur(20px);
+  border-bottom:1px solid var(--border);
+  padding-top:calc(10px + var(--safe-top));
+  padding-bottom:10px;
+  padding-left:14px;
+  padding-right:14px;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  position:sticky;top:0;z-index:100;
+  width:100%;
+  box-sizing:border-box;
+}
+.header-row1{
+  display:flex;align-items:center;justify-content:center;width:100%;gap:14px;
+}
+.logo{display:flex;align-items:center;gap:8px;font-size:.92rem;font-weight:700;white-space:nowrap;flex-shrink:0}
+.logo-center{flex-direction:column;justify-content:center;align-items:center;text-align:center}
+.header-coin{width:40px;height:40px;flex-shrink:0;object-fit:contain}
+.net-toggle{
+  display:flex;align-items:center;background:rgba(118,118,128,.12);
+  border-radius:9px;overflow:hidden;padding:2px;
+  width:100%;
+}
+.net-btn{
+  flex:1;padding:7px 4px;font-family:inherit;font-size:.78rem;font-weight:600;
+  border:none;background:transparent;color:var(--muted);
+  cursor:pointer;transition:all .2s;border-radius:7px;
+  text-align:center;white-space:nowrap;
+}
+.net-btn.am{background:var(--card);color:var(--poly);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.net-btn.at{background:var(--card);color:var(--purple);box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.net-badge{font-size:.65rem;font-weight:600;padding:3px 9px;border-radius:14px;white-space:nowrap;flex-shrink:0}
+.bm{background:rgba(130,71,229,.12);color:var(--poly2)}
+.bt{background:rgba(124,58,237,.12);color:var(--purple2)}
+.net-dot{display:inline-block;width:7px;height:7px;border-radius:50%;margin-inline-start:5px;flex-shrink:0;vertical-align:middle}
+.net-dot.green{background:#34c759}
+.net-dot.yellow{background:#ffcc00}
+.header-icons{display:flex;align-items:center;gap:8px;flex-shrink:0}
+
+/* LAYOUT */
+.wrap{max-width:680px;margin:0 auto;padding:14px 12px}
+
+/* TABS */
+.tabs{display:flex;gap:2px;background:rgba(118,118,128,.12);border-radius:10px;padding:3px;margin-bottom:14px;overflow-x:auto}
+.tab-icon{width:20px;height:20px;vertical-align:-5px;object-fit:contain}
+.tab{flex:1;padding:8px 4px;text-align:center;font-family:inherit;font-size:.76rem;font-weight:600;border:none;background:transparent;color:var(--muted2);border-radius:8px;cursor:pointer;transition:all .2s;white-space:nowrap}
+.tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.tab-content{display:none}.tab-content.active{display:block}
+
+/* CARDS */
+.card{background:var(--card);border:none;border-radius:14px;padding:14px;margin-bottom:12px;box-shadow:0 1px 3px rgba(0,0,0,.04)}
+.card-title{font-size:.7rem;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px;display:flex;align-items:center;gap:6px}
+
+/* HERO BANNER */
+.hero{
+  background:linear-gradient(135deg,rgba(130,71,229,.08) 0%,rgba(0,122,255,.06) 50%,rgba(39,117,202,.06) 100%);
+  border:none;
+  border-radius:16px;padding:18px 16px;margin-bottom:14px;text-align:center;
+}
+.hero h1{font-size:1.05rem;font-weight:700;margin-bottom:4px}
+.hero p{font-size:.76rem;color:var(--muted2);line-height:1.5}
+.hero-badges{display:flex;justify-content:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.hbadge{font-size:.68rem;font-weight:600;padding:4px 10px;border-radius:12px}
+.hb-usdt{background:rgba(39,117,202,.12);color:var(--usdt)}
+.hb-lock{background:rgba(255,149,0,.12);color:var(--gold)}
+.hb-poly{background:rgba(130,71,229,.12);color:var(--poly2)}
+
+/* STEP FLOW */
+.steps{display:flex;gap:0;margin-bottom:16px;position:relative}
+.steps::before{content:'';position:absolute;top:14px;right:14px;left:14px;height:2px;background:var(--border);z-index:0}
+.step{flex:1;display:flex;flex-direction:column;align-items:center;gap:4px;position:relative;z-index:1}
+.step-num{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.75rem;font-weight:700;border:2px solid var(--border);background:var(--card);color:var(--muted);transition:all .3s}
+.step-num.done{background:var(--success);border-color:var(--success);color:white}
+.step-num.active{background:var(--accent);border-color:var(--accent);color:white;box-shadow:0 0 10px rgba(0,122,255,.35)}
+.step-lbl{font-size:.62rem;color:var(--muted);text-align:center;line-height:1.3}
+
+/* INPUTS */
+label{display:block;font-size:.74rem;font-weight:600;color:var(--muted2);margin-bottom:4px}
+input,select,textarea{width:100%;background:var(--bg);border:1px solid transparent;border-radius:10px;padding:10px 12px;color:var(--text);font-family:inherit;font-size:.9rem;outline:none;transition:border-color .2s,background .2s;direction:ltr;text-align:left}
+input:focus,select:focus,textarea:focus{border-color:var(--accent);background:var(--card);box-shadow:0 0 0 3px rgba(0,122,255,.12)}
+input[type=datetime-local]{color-scheme:light}
+select{direction:rtl;text-align:right;cursor:pointer}
+textarea{resize:none;height:70px;font-size:.78rem}
+.field{margin-bottom:11px}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:11px}
+@media(max-width:440px){.field-row{grid-template-columns:1fr}}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;padding:11px 16px;border-radius:12px;font-family:inherit;font-size:.86rem;font-weight:600;border:none;cursor:pointer;transition:all .15s;-webkit-user-select:none;user-select:none}
+.btn:active{transform:scale(.97)}
+.btn-usdt{background:linear-gradient(135deg,var(--poly),var(--accent));color:white;width:100%}
+.btn-usdt:hover{opacity:.92}
+.btn-usdt:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-outline{background:rgba(0,122,255,.08);border:none;color:var(--accent2);width:100%}
+.btn-outline:hover{background:rgba(0,122,255,.14)}
+.btn-gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:#fff;width:100%}
+.btn-gold:hover{opacity:.92}
+.btn-gold:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-withdraw{background:linear-gradient(135deg,#34c759,#28b84e);color:#fff;width:100%}
+.btn-withdraw:hover{opacity:.92}
+.btn-withdraw:disabled{opacity:.35;cursor:not-allowed;transform:none}
+.btn-sm{padding:6px 12px;font-size:.74rem;width:auto}
+.btn-danger{background:rgba(255,59,48,.1);border:none;color:var(--danger);width:100%}
+.btn-danger:hover{background:rgba(255,59,48,.18)}
+
+/* ALERTS */
+.alert{border-radius:10px;padding:10px 13px;font-size:.78rem;font-weight:500;margin-bottom:10px;display:none;line-height:1.5}
+.alert.show{display:block}
+.alert-success{background:rgba(52,199,89,.1);border:none;color:var(--alert-success-text,#1f8a3d)}
+.alert-danger{background:rgba(255,59,48,.1);border:none;color:var(--danger)}
+.alert-warn{background:rgba(255,149,0,.1);border:none;color:var(--alert-warn-text,#b96400)}
+.alert-info{background:rgba(0,122,255,.1);border:none;color:var(--accent2)}
+
+/* LOCK RESULT CARD */
+.lock-result{
+  background:linear-gradient(135deg,rgba(130,71,229,.06),rgba(0,122,255,.04));
+  border:none;
+  border-radius:14px;padding:16px;
+}
+.lock-result-title{font-size:.78rem;font-weight:700;color:var(--poly2);margin-bottom:12px;display:flex;align-items:center;gap:6px}
+.info-row{display:flex;justify-content:space-between;align-items:flex-start;padding:8px 0;border-bottom:1px solid var(--border)}
+.info-row:last-child{border-bottom:none}
+.info-label{font-size:.7rem;color:var(--muted);flex-shrink:0;margin-left:10px}
+.info-value{font-size:.75rem;color:var(--text);font-weight:600;text-align:left;word-break:break-all;font-family:'SF Mono',ui-monospace,monospace}
+.info-value.accent{color:var(--accent2)}
+.info-value.usdt{color:var(--usdt)}
+.info-value.gold{color:var(--gold)}
+
+/* COUNTDOWN — FLIP CLOCK STYLE (real flip animation) */
+.countdown-box{
+  background:var(--bg);border:none;border-radius:12px;
+  padding:14px;margin:10px 0;display:flex;justify-content:center;align-items:flex-start;gap:3px;
+}
+.cd-unit{text-align:center}
+.cd-group{display:flex;gap:1px;justify-content:center;direction:ltr}
+.flip-digit{
+  position:relative;width:32px;height:48px;
+  perspective:220px;
+  font-size:2.3rem;font-weight:800;color:#fff;line-height:1;
+  font-variant-numeric:tabular-nums;
+}
+.flip-digit::after{
+  content:'';position:absolute;left:2px;right:2px;top:calc(50% - .5px);
+  height:1px;background:rgba(0,0,0,.45);z-index:2;pointer-events:none;
+}
+.fd-half{
+  position:absolute;left:0;right:0;height:24px;overflow:hidden;
+  background:linear-gradient(180deg,#4f8ef7 0%,#2f6fe0 100%);
+}
+.fd-half::before{
+  content:attr(data-char);
+  position:absolute;left:0;right:0;height:48px;line-height:48px;text-align:center;
+}
+.fd-top{top:0;border-radius:7px 7px 0 0;z-index:1}
+.fd-top::before{top:0}
+.fd-bottom{bottom:0;border-radius:0 0 7px 7px;z-index:1}
+.fd-bottom::before{top:-24px}
+.fd-flap{
+  position:absolute;left:0;right:0;height:24px;overflow:hidden;z-index:5;
+  background:linear-gradient(180deg,#4f8ef7 0%,#2f6fe0 100%);
+  backface-visibility:hidden;
+}
+.fd-flap::before{
+  content:attr(data-char);
+  position:absolute;left:0;right:0;height:48px;line-height:48px;text-align:center;
+}
+.fd-flap-top{top:0;border-radius:7px 7px 0 0;transform-origin:bottom center}
+.fd-flap-top::before{top:0}
+.fd-flap-bottom{bottom:0;border-radius:0 0 7px 7px;transform-origin:top center;transform:rotateX(90deg)}
+.fd-flap-bottom::before{top:-24px}
+@keyframes fdFoldTop{from{transform:rotateX(0deg)}to{transform:rotateX(-90deg)}}
+@keyframes fdUnfoldBottom{from{transform:rotateX(90deg)}to{transform:rotateX(0deg)}}
+.cd-lbl{font-size:.6rem;color:var(--muted);margin-top:6px;font-weight:600}
+.cd-sep{font-size:1.6rem;font-weight:700;color:var(--muted);align-self:center;padding-bottom:16px}
+.countdown-box.has-date{flex-direction:column;align-items:center;gap:12px}
+.cd-date-row,.cd-time-row{display:flex;justify-content:center;align-items:flex-start;gap:3px;direction:ltr}
+.countdown-box.amt-row{flex-wrap:wrap;align-items:center;direction:ltr}
+.amt-digit{
+  width:32px;height:48px;border-radius:7px;
+  background:linear-gradient(180deg,#4f8ef7 0%,#2f6fe0 100%);
+  color:var(--success);font-size:2.1rem;font-weight:800;
+  display:flex;align-items:center;justify-content:center;
+  font-variant-numeric:tabular-nums;flex-shrink:0;
+}
+.amt-dot{
+  width:14px;height:48px;color:var(--text);font-size:2.1rem;font-weight:800;
+  display:flex;align-items:flex-end;justify-content:center;padding-bottom:2px;
+  flex-shrink:0;
+}
+
+/* تاريخ ووقت الإفراج — نفس تصميم بطاقات العدّاد الزرقاء (بدون عد تنازلي) */
+.date-flip-wrap{
+  position:relative;display:inline-block;border-radius:10px;overflow:hidden;
+  box-shadow:0 3px 8px rgba(37,99,235,.35);
+}
+#lockDate.date-flip-input{
+  width:auto!important;min-width:230px;text-align:center;
+  font-size:1.35rem;font-weight:800;padding:14px 16px;
+  background:linear-gradient(180deg,#4f8ef7 0%,#2f6fe0 100%)!important;
+  color:#fff!important;border:none!important;
+  color-scheme:dark;
+}
+#lockDate.date-flip-input:focus{
+  border-color:transparent;
+  box-shadow:0 0 0 3px rgba(79,142,247,.4);
+}
+
+/* كمية USDC للقفل — نفس تصميم بطاقة التاريخ، بحجم أرقام مطابق لبطاقة المبلغ في المراقبة */
+.amt-flip-wrap{
+  position:relative;display:inline-block;border-radius:10px;overflow:hidden;
+  box-shadow:0 3px 8px rgba(37,99,235,.35);
+}
+#lockAmt.amt-flip-input{
+  width:230px!important;text-align:center!important;
+  font-size:2.1rem;font-weight:800;padding:12px 16px;
+  background:linear-gradient(180deg,#4f8ef7 0%,#2f6fe0 100%)!important;
+  color:#fff!important;border:none!important;
+  font-variant-numeric:tabular-nums;
+  -webkit-appearance:textfield;-moz-appearance:textfield;
+}
+#lockAmt.amt-flip-input::placeholder{ color:rgba(255,255,255,.65); }
+#lockAmt.amt-flip-input:focus{
+  border-color:transparent;
+  box-shadow:0 0 0 3px rgba(79,142,247,.4);
+}
+
+/* LOCK LIST */
+.lock-item{
+  background:var(--card2);border:none;border-radius:12px;
+  padding:12px;margin-bottom:8px;
+}
+.lock-item-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.lock-badge{font-size:.66rem;font-weight:600;padding:3px 9px;border-radius:10px}
+.lb-locked{background:rgba(255,59,48,.12);color:var(--danger)}
+.lb-unlocked{background:rgba(52,199,89,.12);color:var(--success)}
+.lb-pending{background:rgba(255,149,0,.12);color:var(--warn)}
+.lock-amt{font-size:1.1rem;font-weight:700;color:var(--usdt)}
+.lock-meta{font-size:.68rem;color:var(--muted);margin-top:3px}
+.lock-addr{font-family:'SF Mono',ui-monospace,monospace;font-size:.66rem;color:var(--accent2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+/* PROGRESS */
+.progress-bar{background:var(--border);border-radius:4px;height:6px;overflow:hidden;margin:8px 0}
+.progress-fill{height:100%;border-radius:4px;transition:width .8s ease;background:linear-gradient(90deg,#34c759,#30d158)}
+.progress-fill.withdrawn{background:linear-gradient(90deg,var(--danger),#ff6961)}
+.progress-fill.unlocked{background:linear-gradient(90deg,#34c759,#30d158)}
+
+/* COPY ROW */
+.copy-row{display:flex;align-items:center;gap:6px;background:var(--bg);border:none;border-radius:10px;padding:8px 12px}
+.copy-row span{flex:1;font-family:'SF Mono',ui-monospace,monospace;font-size:.7rem;color:var(--accent2);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;direction:ltr}
+.copy-btn{background:none;border:none;color:var(--muted);cursor:pointer;font-size:.9rem;padding:2px 4px;flex-shrink:0;transition:color .2s}
+.copy-btn:hover{color:var(--accent)}
+
+/* SPINNER */
+.spinner{width:14px;height:14px;border:2px solid rgba(255,255,255,.3);border-top-color:white;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+.spinner-dark{border-top-color:#fff}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MISC */
+.muted{color:var(--muted);font-size:.74rem}
+.mt8{margin-top:8px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:440px){.row2{grid-template-columns:1fr}}
+.divider{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:.72rem;margin:12px 0}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.tag-usdt{background:rgba(39,117,202,.12);color:var(--usdt);font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:6px}
+.tag-poly{background:rgba(130,71,229,.1);color:var(--poly2);font-size:.65rem;font-weight:600;padding:2px 7px;border-radius:6px}
+.pw-wrap{position:relative;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.pw-wrap input{flex:1;min-width:120px}
+.pw-action{flex-shrink:0;background:rgba(0,122,255,.08);border:none;color:var(--accent2);font-size:.7rem;font-weight:600;padding:10px 11px;border-radius:10px;cursor:pointer;font-family:inherit;transition:all .15s;white-space:nowrap}
+.pw-action:active{transform:scale(.95)}
+.pw-action.copy{background:rgba(118,118,128,.12);color:var(--muted2)}
+
+/* KEY MODE MINI TOGGLE (private key vs seed phrase) */
+.mini-tabs{display:flex;gap:2px;background:rgba(118,118,128,.12);border-radius:10px;padding:3px;margin-bottom:10px}
+.mini-tab{flex:1;padding:8px 4px;text-align:center;font-family:inherit;font-size:.72rem;font-weight:600;border:none;background:transparent;color:var(--muted2);border-radius:8px;cursor:pointer;transition:all .2s}
+.mini-tab.active{background:var(--card);color:var(--text);box-shadow:0 1px 4px rgba(0,0,0,.12)}
+.seed-box textarea{height:64px;font-size:.82rem;letter-spacing:.2px}
+.seed-hint{font-size:.66rem;color:var(--muted);margin-top:4px;margin-bottom:2px;line-height:1.5}
+.note-box{background:rgba(255,149,0,.06);border:none;border-radius:10px;padding:11px 13px;font-size:.72rem;color:var(--muted2);line-height:1.6;margin-bottom:12px}
+.note-box strong{color:var(--gold)}
+
+/* TOPUP */
+.topup-panel{background:rgba(52,199,89,.06);border:none;border-radius:12px;padding:12px;margin-top:9px;display:none}
+.topup-panel.open{display:block}
+.topup-title{font-size:.7rem;font-weight:700;color:var(--success);margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.btn-topup{background:rgba(52,199,89,.12);border:none;color:var(--success);font-size:.7rem;padding:5px 11px;border-radius:8px;font-family:inherit;font-weight:600;cursor:pointer;transition:all .2s}
+.btn-topup:hover{background:rgba(52,199,89,.22)}
+
+/* iOS extras */
+.wrap{padding-bottom:calc(20px + var(--safe-bottom))}
+::-webkit-scrollbar{display:none}
+button{-webkit-appearance:none;appearance:none}
+</style>
+</head>
+<body>
+
+<div class="app-banner" id="appBanner">
+  <img src="banner.png" alt="" onerror="document.getElementById('appBanner').classList.add('hidden')"/>
+</div>
+
+<header>
+  <div class="header-row1">
+    <img src="matic.svg" alt="" class="header-coin"/>
+    <div class="logo logo-center">
+      <div style="font-size:1.15rem;font-weight:800;letter-spacing:-.01em">أداة الإدّخار لعملة USDC</div>
+      <div style="font-size:.58rem;color:var(--muted);font-weight:400">تخزين العملة المستقرة USDC حتى تاريخ محدد</div>
+    </div>
+    <img src="usdc.svg" alt="" class="header-coin"/>
+  </div>
+  <div class="net-toggle">
+    <button class="net-btn am" id="btnMain" onclick="switchNet('main')">الشبكة الرئيسية<span class="net-dot green"></span></button>
+    <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" aria-label="تبديل الوضع الداكن">
+      <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"></circle><line x1="12" y1="2" x2="12" y2="4"></line><line x1="12" y1="20" x2="12" y2="22"></line><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line><line x1="2" y1="12" x2="4" y2="12"></line><line x1="20" y1="12" x2="22" y2="12"></line><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line></svg>
+      <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
+    </button>
+    <button class="net-btn" id="btnTest" onclick="switchNet('test')">الشبكة التجريبية<span class="net-dot yellow"></span></button>
+  </div>
+</header>
+
+<div class="wrap">
+  <div class="tabs">
+    <button class="tab active" id="t-lock"   onclick="switchTab('lock',this)"><img src="lock.png" alt="" class="tab-icon"/> قفل جديد</button>
+    <button class="tab" id="t-topup" onclick="switchTab('topup',this)"><img src="add.png" alt="" class="tab-icon"/> زيادة الرصيد</button>
+    <button class="tab"        id="t-unlock" onclick="switchTab('unlock',this)"><img src="withdraw.png" alt="" class="tab-icon"/> سحب</button>
+
+    <button class="tab"        id="t-info"   onclick="switchTab('info',this)"><img src="monitor.png" alt="" class="tab-icon"/> مراقبة</button>
+  </div>
+
+  <!-- ══════════════════ LOCK TAB ══════════════════ -->
+  <div id="tab-lock" class="tab-content active">
+
+    <div class="hero">
+      <h1><img src="lockey.png" alt="" style="width:26px;height:26px;vertical-align:-5px;margin-left:6px"> قفل USDC بالتوقيت الزمني <img src="lockey2.png" alt="" style="width:26px;height:26px;vertical-align:-5px;margin-right:6px"></h1>
+      <p>أقفل مبلغ USDC في عقد ذكي حتى تاريخ محدد.<br/>لا أحد يستطيع السحب قبل انتهاء المدة — حتى أنت.</p>
+    </div>
+
+    <!-- STEP INDICATOR -->
+    <div class="steps" id="stepBar">
+      <div class="step"><div class="step-num active" id="sn1">1</div><div class="step-lbl">بيانات<br/>القفل</div></div>
+      <div class="step"><div class="step-num" id="sn2">2</div><div class="step-lbl">موافقة<br/>Approve</div></div>
+      <div class="step"><div class="step-num" id="sn3">3</div><div class="step-lbl">إيداع<br/>Lock</div></div>
+      <div class="step"><div class="step-num" id="sn4">✓</div><div class="step-lbl">مكتمل</div></div>
+    </div>
+
+    <!-- STEP 1: WALLET + PARAMS -->
+    <div id="lockStep1">
+      <div class="card">
+        <div class="card-title">🔑 بيانات المحفظة</div>
+
+        <div class="mini-tabs" id="lockKeyModeTabs">
+          <button type="button" class="mini-tab active" id="lockModeBtn-pk" onclick="setKeyMode('lock','pk')">🔑 مفتاح خاص</button>
+          <button type="button" class="mini-tab" id="lockModeBtn-seed" onclick="setKeyMode('lock','seed')">🔐 كلمات الاسترجاع</button>
+        </div>
+
+        <div id="lockSeedBox" class="seed-box field" style="display:none">
+          <label>كلمات الاسترجاع (Seed Phrase — 12 إلى 24 كلمة)</label>
+          <textarea id="lockSeed" placeholder="اكتب أو الصق الكلمات مفصولة بمسافات..."></textarea>
+          <div class="seed-hint">🔎 سيتم البحث تلقائياً بين عناوين هذه المحفظة عن أول عنوان به رصيد USDC كافٍ (أو POL على الأقل) واستخدام مفتاحه الخاص.</div>
+          <div class="pw-wrap">
+            <button type="button" class="pw-action" onclick="pasteToField('lockSeed')">📥 لصق</button>
+            <button type="button" class="pw-action" onclick="scanSeed('lock')">🔍 البحث عن عنوان برصيد</button>
+          </div>
+          <div id="lockSeedStatus" class="alert"></div>
+          <div id="lockSeedSummary" style="display:none"></div>
+        </div>
+
+        <div class="field" id="lockPkBox">
+          <label>المفتاح الخاص (Sender)</label>
+          <div class="pw-wrap">
+            <input type="password" id="lockPK" placeholder="مفتاح خاص 64 hex أو 0x..." oninput="onPKInput()"/>
+            <button type="button" class="pw-action" onclick="pasteToField('lockPK')">📥 لصق</button>
+          </div>
+        </div>
+        <div id="pkInfo" style="display:none;margin-bottom:6px">
+          <div class="copy-row">
+            <span id="pkAddr">—</span>
+            <button class="copy-btn" onclick="copyEl('pkAddr')">📋</button>
+          </div>
+        </div>
+        <div class="field-row" style="margin-top:6px;margin-bottom:2px">
+          <div class="info-row" style="border:none;padding:4px 0">
+            <span class="info-label">POL</span>
+            <span class="info-value accent" id="pkMATIC">0.0000</span>
+          </div>
+          <div class="info-row" style="border:none;padding:4px 0">
+            <span class="info-label">USDC</span>
+            <span class="info-value usdt" id="pkUSDC">0.0000</span>
+          </div>
+        </div>
+        <div id="pkPolAlert" style="display:none;font-size:.68rem;color:var(--warn);background:rgba(255,149,0,.08);border-radius:8px;padding:6px 10px;margin-top:6px">
+          ⚠️ رصيد POL صفر — يجب امتلاك بعض POL في هذا العنوان لدفع رسوم الشبكة
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title">⚙️ إعدادات القفل</div>
+
+        <div class="field">
+          <label>كمية USDC للقفل</label>
+          <div style="display:flex;justify-content:center">
+            <div class="amt-flip-wrap">
+              <input type="number" id="lockAmt" placeholder="0.00" min="0" step="0.01" oninput="updatePreview()" class="amt-flip-input"/>
+            </div>
+          </div>
+        </div>
+        <div class="field mt8">
+          <label style="display:flex;align-items:center;justify-content:center;gap:6px;font-size:.82rem"><img src="calendar.png" alt="" class="tab-icon"/> تاريخ ووقت الإفراج</label>
+          <div style="display:flex;justify-content:center">
+            <div class="date-flip-wrap">
+              <input type="datetime-local" id="lockDate" oninput="updatePreview()" class="date-flip-input"/>
+            </div>
+          </div>
+        </div>
+        <div class="field">
+          <label>عنوان المستفيد</label>
+          <div class="pw-wrap">
+            <input type="text" id="lockBene" placeholder="0x..." disabled/>
+            <button type="button" class="pw-action" onclick="pasteBeneficiary()">📥 لصق</button>
+          </div>
+          <div id="lockBeneAlert" class="alert" style="margin-top:6px"></div>
+          <label style="display:flex;align-items:center;gap:6px;margin-top:8px;font-size:.78rem;cursor:pointer;color:var(--muted)">
+            <input type="checkbox" id="lockBeneSelf" checked onchange="toggleBeneSelf()" style="width:auto;accent-color:var(--accent, #6d5dfc)"/>
+            أنا المستفيد (صاحب المحفظة)
+          </label>
+        </div>
+
+        <!-- PREVIEW -->
+        <div id="lockPreview" style="display:none;margin-top:6px">
+          <div class="divider">معاينة القفل</div>
+          <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;font-size:.74rem">
+            <div class="info-row"><span class="info-label">المبلغ</span><span class="info-value usdt" id="prvAmt">—</span></div>
+            <div class="info-row"><span class="info-label">يُفرج عند</span><span class="info-value gold" id="prvDate">—</span></div>
+            <div class="info-row" style="border:none"><span class="info-label">مدة القفل</span><span class="info-value" id="prvDur">—</span></div>
+          </div>
+          <div class="progress-bar mt8"><div class="progress-fill" id="prvProg" style="width:0%"></div></div>
+          <div style="font-size:.66rem;color:var(--muted);text-align:center" id="prvProgLbl"></div>
+        </div>
+
+        <div id="lockStep1Alert" class="alert mt8"></div>
+        <button class="btn btn-usdt mt8" onclick="goStep2()">التالي: موافقة Approve →</button>
+      </div>
+    </div>
+
+    <!-- STEP 2: APPROVE -->
+    <div id="lockStep2" style="display:none">
+      <div class="note-box">
+        <strong>⚡ الخطوة 2: Approve</strong><br/>
+        قبل إيداع USDC في عنوان التخزين، يجب أن تمنح عنوان التخزين إذن الوصول لمبلغك.<br/>
+        هذه معاملة منفصلة على Polygon <strong>رسومها ~0.001$ فقط</strong> بسبب رخص Gas.
+      </div>
+      <div class="card">
+        <div class="card-title">📝 تفاصيل الموافقة</div>
+        <div class="info-row"><span class="info-label">عنوان التخزين المُفوَّض</span><span class="info-value accent" id="approveContract">—</span></div>
+        <div class="info-row"><span class="info-label">المبلغ المُوافَق عليه</span><span class="info-value usdt" id="approveAmt">—</span></div>
+        <div class="info-row"><span class="info-label">من عنوان</span><span class="info-value" id="approveFrom">—</span></div>
+        <div class="info-row" style="border:none"><span class="info-label">المستفيد</span><span class="info-value gold" id="approveBene">—</span></div>
+        <div id="step2Alert" class="alert mt8"></div>
+        <div class="row2 mt8">
+          <button class="btn btn-outline" onclick="backStep1()">← رجوع</button>
+          <button class="btn btn-usdt" id="approveBtn" onclick="doApprove()">
+            <span id="approveBtnTxt">✅ تنفيذ Approve</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- STEP 3: DEPOSIT/LOCK -->
+    <div id="lockStep3" style="display:none">
+      <div class="note-box">
+        <strong>🔒 الخطوة 3: إيداع القفل</strong><br/>
+        سيتم إيداع <strong id="step3Amt">—</strong> USDC في عقد القفل الزمني للمستفيد <strong id="step3Bene" style="font-family:monospace">—</strong>.<br/>
+        <strong>لا يمكن استرداد المبلغ قبل:</strong> <span id="step3Date" style="color:var(--gold)">—</span>
+      </div>
+      <div class="card">
+        <div id="step3Alert" class="alert"></div>
+        <button class="btn btn-gold" id="lockBtn" onclick="doLock()">
+          <span id="lockBtnTxt">🔒 تأكيد القفل</span>
+        </button>
+        <button class="btn btn-outline mt8" onclick="backStep2()">← رجوع</button>
+      </div>
+    </div>
+
+    <!-- STEP 4: DONE -->
+    <div id="lockStep4" style="display:none">
+      <div class="lock-result">
+        <div class="lock-result-title">✅ تم القفل بنجاح!</div>
+        <div id="lockFinalInfo"></div>
+      </div>
+      <button class="btn btn-outline mt8" onclick="resetLock()">🔒 قفل جديد</button>
+    </div>
+  </div>
+
+  <!-- ══════════════════ TOP-UP TAB ══════════════════ -->
+  <div id="tab-topup" class="tab-content">
+    <div class="hero" style="margin-bottom:12px">
+      <h1>➕ إيداع تراكمي على قفل موجود</h1>
+      <p>أضف رصيداً لقفل موجود دون فتح قفل جديد.<br/>المبلغ يُضاف فوراً ويُسحب مع الرصيد الأصلي عند الإفراج.</p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔑 المحفظة</div>
+
+      <div class="mini-tabs" id="topupKeyModeTabs">
+        <button type="button" class="mini-tab active" id="topupModeBtn-pk" onclick="setKeyMode('topup','pk')">🔑 مفتاح خاص</button>
+        <button type="button" class="mini-tab" id="topupModeBtn-seed" onclick="setKeyMode('topup','seed')">🔐 كلمات الاسترجاع</button>
+      </div>
+
+      <div id="topupSeedBox" class="seed-box field" style="display:none">
+        <label>كلمات الاسترجاع (Seed Phrase — 12 إلى 24 كلمة)</label>
+        <textarea id="topupSeed" placeholder="اكتب أو الصق الكلمات مفصولة بمسافات..."></textarea>
+        <div class="seed-hint">🔎 سيتم البحث تلقائياً بين عناوين هذه المحفظة عن أول عنوان به رصيد USDC كافٍ (أو POL على الأقل) واستخدام مفتاحه الخاص.</div>
+        <div class="pw-wrap">
+          <button type="button" class="pw-action" onclick="pasteToField('topupSeed')">📥 لصق</button>
+          <button type="button" class="pw-action" onclick="scanSeed('topup')">🔍 البحث عن عنوان برصيد</button>
+        </div>
+        <div id="topupSeedStatus" class="alert"></div>
+        <div id="topupSeedSummary" style="display:none"></div>
+      </div>
+
+      <div class="field" id="topupPkBox">
+        <label>المفتاح الخاص (المُودِع)</label>
+        <div class="pw-wrap">
+          <input type="password" id="topupPK" placeholder="مفتاح خاص 64 hex أو 0x..." oninput="onTopupPKInput()"/>
+          <button type="button" class="pw-action" onclick="pasteToField('topupPK')">📥 لصق</button>
+        </div>
+      </div>
+      <div id="topupPKInfo" style="display:none;margin-bottom:6px">
+        <div class="copy-row">
+          <span id="topupAddr">—</span>
+          <button class="copy-btn" onclick="copyEl('topupAddr')">📋</button>
+        </div>
+      </div>
+      <div class="field-row" style="margin-top:6px;margin-bottom:2px">
+        <div class="info-row" style="border:none;padding:4px 0">
+          <span class="info-label">POL</span>
+          <span class="info-value accent" id="topupMATIC">0.0000</span>
+        </div>
+        <div class="info-row" style="border:none;padding:4px 0">
+          <span class="info-label">USDC</span>
+          <span class="info-value usdt" id="topupUSDC">0.0000</span>
+        </div>
+      </div>
+      <div id="topupPolAlert" style="display:none;font-size:.68rem;color:var(--warn);background:rgba(255,149,0,.08);border-radius:8px;padding:6px 10px;margin-top:6px">
+        ⚠️ رصيد POL صفر — يجب امتلاك بعض POL في هذا العنوان لدفع رسوم الشبكة
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔍 تحديد القفل</div>
+      <div class="field">
+        <label>عنوان التخزين (Storage Address)</label>
+        <div class="pw-wrap">
+          <input type="text" id="topupContractAddr" placeholder="0x..." style="direction:ltr" oninput="onTopupContractInput()"/>
+          <button type="button" class="pw-action" onclick="pasteToField('topupContractAddr')">📥 لصق</button>
+        </div>
+      </div>
+      <input type="hidden" id="topupLockId" value="0"/>
+
+      <div id="topupLockInfo" style="display:none;margin-top:12px">
+        <div style="background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px">
+          <div class="info-row"><span class="info-label">Lock #</span><span class="info-value gold" id="tuLockId">—</span></div>
+          <div class="info-row"><span class="info-label">الرصيد الحالي</span><span class="info-value usdt" id="tuAmt">—</span></div>
+          <div class="info-row"><span class="info-label">يُفرج عند</span><span class="info-value gold" id="tuDate">—</span></div>
+          <div class="info-row"><span class="info-label">المستفيد</span><span class="info-value accent" id="tuBene">—</span></div>
+          <div class="info-row" style="border:none"><span class="info-label">الحالة</span><span id="tuStatus">—</span></div>
+        </div>
+      </div>
+      <div id="topupCheckAlert" class="alert mt8"></div>
+    </div>
+
+    <div id="topupDepositCard" class="card" style="display:none">
+      <div class="card-title">💰 مبلغ الإيداع الإضافي</div>
+      <div class="note-box">
+        <strong>⚡ خطوتان:</strong> Approve ثم TopUp — كل منهما معاملة مستقلة برسوم ~0.001$ على Polygon.
+      </div>
+      <div class="field">
+        <label>كمية USDC للإضافة</label>
+        <input type="number" id="topupAmt" placeholder="0.000000" min="0" step="0.000001" oninput="updateTopupPreview()"/>
+      </div>
+      <div id="topupPreview" style="display:none;background:var(--bg);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:10px;font-size:.74rem">
+        <div class="info-row"><span class="info-label">إضافة</span><span class="info-value usdt" id="tuPrevAdd">—</span></div>
+        <div class="info-row" style="border:none"><span class="info-label">الرصيد الجديد</span><span class="info-value gold" id="tuPrevTotal">—</span></div>
+      </div>
+      <div id="topupAlert" class="alert"></div>
+      <div class="row2 mt8">
+        <button class="btn btn-outline" id="topupApproveBtn" onclick="doTopupApprove()">
+          <span id="topupApproveTxt">① Approve</span>
+        </button>
+        <button class="btn btn-gold" id="topupExecBtn" onclick="doTopupExec()" disabled>
+          <span id="topupExecTxt">② إيداع ➕</span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ UNLOCK TAB ══════════════════ -->
+  <div id="tab-unlock" class="tab-content">
+    <div class="card">
+      <div class="card-title">🔓 سحب USDC بعد انتهاء القفل</div>
+      <div class="note-box">
+        يمكن السحب فقط بعد انتهاء المدة المحددة.<br/>
+        <strong>المستفيد هو الوحيد</strong> الذي يستطيع سحب الأموال.
+      </div>
+      <div class="field">
+        <label>عنوان التخزين (Storage Address)</label>
+        <div class="pw-wrap">
+          <input type="text" id="unlockContractAddr" placeholder="0x..." style="direction:ltr" oninput="onUnlockContractInput()"/>
+          <button type="button" class="pw-action" onclick="pasteToField('unlockContractAddr')">📥 لصق</button>
+        </div>
+      </div>
+      <div class="mini-tabs" id="unlockKeyModeTabs">
+        <button type="button" class="mini-tab active" id="unlockModeBtn-pk" onclick="setKeyMode('unlock','pk')">🔑 مفتاح خاص</button>
+        <button type="button" class="mini-tab" id="unlockModeBtn-seed" onclick="setKeyMode('unlock','seed')">🔐 كلمات الاسترجاع</button>
+      </div>
+
+      <div id="unlockSeedBox" class="seed-box field" style="display:none">
+        <label>كلمات الاسترجاع (Seed Phrase — 12 إلى 24 كلمة)</label>
+        <textarea id="unlockSeed" placeholder="اكتب أو الصق الكلمات مفصولة بمسافات..."></textarea>
+        <div class="seed-hint">🔎 أدخل عنوان التخزين أولاً — سيتم البحث تلقائياً بين عناوين هذه المحفظة عن العنوان الذي يطابق المستفيد الفعلي لهذا القفل تحديدًا، واستخدام مفتاحه الخاص.</div>
+        <div class="pw-wrap">
+          <button type="button" class="pw-action" onclick="pasteToField('unlockSeed')">📥 لصق</button>
+          <button type="button" class="pw-action" onclick="scanSeed('unlock')">🔍 البحث عن عنوان برصيد</button>
+        </div>
+        <div id="unlockSeedStatus" class="alert"></div>
+      </div>
+
+      <div class="field" id="unlockPkBox">
+        <label>المفتاح الخاص (المستفيد)</label>
+        <div class="pw-wrap">
+          <input type="password" id="unlockPK" placeholder="مفتاح خاص 64 hex أو 0x..." oninput="onUnlockPKInput()"/>
+          <button type="button" class="pw-action" onclick="pasteToField('unlockPK')">📥 لصق</button>
+        </div>
+      </div>
+      <input type="hidden" id="unlockId" value="0"/>
+      <div id="unlockInfo" style="display:none" class="card">
+        <div class="card-title">تفاصيل القفل</div>
+        <div id="unlockDetails"></div>
+        <div id="unlockCountdown" class="countdown-box" style="display:none"></div>
+      </div>
+      <div id="unlockAlert" class="alert"></div>
+      <div class="mt8">
+        <button class="btn btn-withdraw" id="withdrawBtn" onclick="doWithdraw()" disabled>
+          <span id="withdrawBtnTxt"><img src="withdraw.png" alt="" style="width:22px;height:22px;vertical-align:middle;margin-left:6px"> <span style="font-size:1rem;font-weight:700">سحب</span></span>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══════════════════ MY LOCKS TAB ══════════════════ -->
+
+  <!-- ══════════════════ INFO TAB ══════════════════ -->
+  <div id="tab-info" class="tab-content">
+    <div class="hero" style="margin-bottom:12px">
+      <h1>👁️ مراقبة عقود القفل</h1>
+      <p style="font-size:.78rem;color:var(--muted2);margin-top:6px">
+        تحقق من حالة أي قفل زمني بدون الحاجة لمفتاح خاص — قراءة مباشرة من البلوكشين.
+      </p>
+    </div>
+
+    <div class="card">
+      <div class="card-title">🔍 بيانات عنوان التخزين</div>
+      <div class="field">
+        <label>عنوان التخزين (Storage Address)</label>
+        <div class="pw-wrap">
+          <input type="text" id="watchContractAddr" placeholder="0x..." style="direction:ltr" oninput="onWatchContractInput()"/>
+          <button type="button" class="pw-action" onclick="pasteToField('watchContractAddr')">📥 لصق</button>
+        </div>
+      </div>
+      <input type="hidden" id="watchLockId" value="0"/>
+      <div id="watchAlert" class="alert mt8"></div>
+    </div>
+
+    <div id="watchInfo" style="display:none" class="card">
+      <div class="card-title">📋 نتائج المراقبة</div>
+      <div id="watchDetails"></div>
+      <div class="info-row" style="border:none;padding-bottom:0"><span class="info-label">يُفرج عند</span></div>
+      <div id="watchCountdown" class="countdown-box" style="display:none"></div>
+      <div id="watchTopupBtnWrap" style="display:none;margin-top:10px">
+        <button class="btn btn-withdraw" style="font-size:.95rem" onclick="goToTopupFromWatch(document.getElementById('watchContractAddr').value.trim(), 0)">
+          <img src="add.png" alt="" style="width:20px;height:20px;vertical-align:middle;margin-left:6px"> <span style="font-size:1rem;font-weight:700">زيادة الرصيد على هذا القفل</span>
+        </button>
+      </div>
+      <div id="watchWithdrawBtnWrap" style="display:none;margin-top:8px">
+        <button class="btn btn-withdraw" style="font-size:.95rem" onclick="goToWithdrawFromWatch(document.getElementById('watchContractAddr').value.trim())">
+          <img src="withdraw.png" alt="" style="width:20px;height:20px;vertical-align:middle;margin-left:6px"> <span style="font-size:1rem;font-weight:700">انتقل للسحب</span>
+        </button>
+      </div>
+      <div id="watchWithdrawnBadge" style="display:none;margin-top:8px">
+        <div class="btn" style="width:100%;font-size:.95rem;background:rgba(255,59,48,.12);color:var(--danger);pointer-events:none;text-align:center">
+          <span style="font-size:1rem;font-weight:700">🔴 تم سحب هذا القفل</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="app-banner app-banner-bottom" id="appBannerBottom">
+    <img src="banner2.png" alt="" onerror="document.getElementById('appBannerBottom').classList.add('hidden')"/>
+  </div>
+
+  <div style="border-radius:8px;padding:7px 10px;margin:12px 4px 0;font-size:.62rem;color:var(--muted);line-height:1.5;text-align:center;border:1px solid var(--border)">
+    ⛽ ملاحظة: تحتاج إلى كمية بسيطة من <strong style="color:var(--muted2)">Polygon (POL)</strong> لدفع رسوم الشبكة عند إنشاء عنوان التخزين أو السحب منه.
+  </div>
+
+  <div style="border-radius:8px;padding:7px 10px;margin:6px 4px 0;font-size:.62rem;color:var(--muted);line-height:1.5;text-align:center;border:1px solid var(--border)">
+    ⚠️ تنبيه: عنوان التخزين هو عقد ذكي،  لا تُرسل USDC إليه مباشرةً كمعاملة عادية من محفظة أو منصة، أي رصيد مُرسَل هكذا لا يمكن استرداده. لإضافة رصيد استخدم تبويب <strong style="color:var(--muted2)">زيادة الرصيد على هذه الاداة دائما</strong>.
+  </div>
+
+  <div style="border-radius:8px;padding:7px 10px;margin:6px 4px 0;font-size:.62rem;color:var(--muted);line-height:1.5;text-align:center;border:1px solid var(--border)">
+    ⚠️ مهم: عند إنشاء عنوان التخزين قم بنسخه إلى أي مكان، وإذا نسيته قم بالبحث عنه في سجل معاملات محفظتك التي أنشأته بها، تحت اسم: <strong style="color:var(--muted2)">contract call</strong> أو <strong style="color:var(--muted2)">lock</strong>.
+  </div>
+
+</div><!-- /wrap -->
+
+<!-- ethers.js v6 -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.7.1/ethers.umd.min.js"></script>
+
+<script>
+// ─────────────────────────────────────────────
+//  CONFIG — Polygon
+// ─────────────────────────────────────────────
+const NETS = {
+  main: {
+    label:            'الشبكة الرئيسية',
+    chainId:          137,
+    rpc:              'https://polygon.drpc.org',
+    rpcFallbacks:     ['https://polygon-bor-rpc.publicnode.com', 'https://rpc.ankr.com/polygon'],
+    explorer:         'https://polygonscan.com/tx/',
+    contractExplorer: 'https://polygonscan.com/address/',
+    usdc:             '0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359', // USDC on Polygon
+    usdcDecimals:     6,
+    symbol:           'POL',
+    minTip:           50000000000n  // 50 gwei
+  },
+  test: {
+    label:            'الشبكة التجريبية',
+    chainId:          80002,
+    rpc:              'https://polygon-amoy.drpc.org',
+    rpcFallbacks:     ['https://polygon-amoy-bor-rpc.publicnode.com', 'https://rpc.ankr.com/polygon_amoy'],
+    explorer:         'https://amoy.polygonscan.com/tx/',
+    contractExplorer: 'https://amoy.polygonscan.com/address/',
+    usdc:             '0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582', // Mock USDC Amoy
+    usdcDecimals:     6,
+    symbol:           'POL',
+    minTip:           30000000000n  // 30 gwei (minimum 25 gwei + margin)
+  }
+};
+
+// Gas overrides — يجلب baseFee من الشبكة ويضيف tip مناسب
+async function getGasOverrides() {
+  try {
+    const feeData = await provider.getFeeData();
+    const tip = NETS[currentNet].minTip;
+    const base = feeData.lastBaseFeePerGas || feeData.gasPrice || 0n;
+    const maxFee = base * 2n + tip;
+    return { maxPriorityFeePerGas: tip, maxFeePerGas: maxFee };
+  } catch {
+    // fallback: legacy gasPrice
+    return { gasPrice: NETS[currentNet].minTip };
+  }
+}
+
+// USDCTimeLock bytecode — compiled with solc 0.8.23 --optimize --optimize-runs 200
+// Constructor: takes address _usdt
+// البايتكود المُحدَّث — مُترجم بـ solc 0.8.35 --optimize --optimize-runs 200
+// يحتوي على: lock / topUp / withdraw / getLock
+const TIMELOCK_BYTECODE = '0x6080604052348015600e575f5ffd5b5060405161089e38038061089e833981016040819052602b91604e565b5f80546001600160a01b0319166001600160a01b03929092169190911790556079565b5f60208284031215605d575f5ffd5b81516001600160a01b03811681146072575f5ffd5b9392505050565b610818806100865f395ff3fe608060405234801561000f575f5ffd5b506004361061007a575f3560e01c8063d68f4dd111610058578063d68f4dd1146100d9578063de643a711461016a578063e2ab691d1461017d578063f4dadc6114610190575f5ffd5b806311eac8551461007e5780632e1a7d4d146100ad5780639b10b6f5146100c2575b5f5ffd5b5f54610090906001600160a01b031681565b6040516001600160a01b0390911681526020015b60405180910390f35b6100c06100bb366004610703565b6101d3565b005b6100cb60015481565b6040519081526020016100a4565b61013e6100e7366004610703565b5f90815260026020818152604092839020835160808101855281546001600160a01b031680825260018301549382018490529382015494810185905260039091015460ff1615156060909101819052919390929190565b604080516001600160a01b039095168552602085019390935291830152151560608201526080016100a4565b6100c061017836600461071a565b610394565b6100c061018b36600461073a565b610545565b61013e61019e366004610703565b600260208190525f918252604090912080546001820154928201546003909201546001600160a01b0390911692919060ff1684565b5f81815260026020526040902080546001600160a01b031633146102305760405162461bcd60e51b815260206004820152600f60248201526e4e6f742062656e656669636961727960881b60448201526064015b60405180910390fd5b80600201544210156102735760405162461bcd60e51b815260206004820152600c60248201526b14dd1a5b1b081b1bd8dad95960a21b6044820152606401610227565b600381015460ff16156102bc5760405162461bcd60e51b815260206004820152601160248201527020b63932b0b23c903bb4ba34323930bbb760791b6044820152606401610227565b60038101805460ff191660019081179091555f5482549183015460405163a9059cbb60e01b81526001600160a01b039384166004820152602481019190915291169063a9059cbb906044016020604051808303815f875af1158015610323573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906103479190610777565b50805460018201546040519081526001600160a01b039091169083907fcf7d23a3cbe4e8b36ff82fd1b05b1b17373dc7804b4ebbd6e2356716ef2023729060200160405180910390a35050565b5f828152600260205260409020816103db5760405162461bcd60e51b815260206004820152600a6024820152690416d6f756e74203e20360b41b6044820152606401610227565b600381015460ff16156104245760405162461bcd60e51b815260206004820152601160248201527020b63932b0b23c903bb4ba34323930bbb760791b6044820152606401610227565b4281600201541161046a5760405162461bcd60e51b815260206004820152601060248201526f105b1c9958591e481d5b9b1bd8dad95960821b6044820152606401610227565b5f546040516323b872dd60e01b8152336004820152306024820152604481018490526001600160a01b03909116906323b872dd906064016020604051808303815f875af11580156104bd573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906104e19190610777565b5081816001015f8282546104f591906107b1565b9091555050600181015460405184917f43aaaa1283a8e83fc06a9914af587a9e6c3daebd722d1d79903d997925b6522e9161053891868252602082015260400190565b60405180910390a2505050565b4281116105855760405162461bcd60e51b815260206004820152600e60248201526d4d7573742062652066757475726560901b6044820152606401610227565b5f82116105c15760405162461bcd60e51b815260206004820152600a6024820152690416d6f756e74203e20360b41b6044820152606401610227565b5f546040516323b872dd60e01b8152336004820152306024820152604481018490526001600160a01b03909116906323b872dd906064016020604051808303815f875af1158015610614573d5f5f3e3d5ffd5b505050506040513d601f19601f820116820180604052508101906106389190610777565b50604080516080810182526001600160a01b0385811680835260208084018781528486018781525f606087018181526001805483526002808752928a9020985189546001600160a01b0319169816979097178855925187870155905190860155516003909401805460ff19169415159490941790935590548351868152928301859052909290917fdb9f4f483629adc742ab3c617347f30d312040977540207f893353c316e41e65910160405180910390a360018054905f6106f9836107ca565b9190505550505050565b5f60208284031215610713575f5ffd5b5035919050565b5f5f6040838503121561072b575f5ffd5b50508035926020909101359150565b5f5f5f6060848603121561074c575f5ffd5b83356001600160a01b0381168114610762575f5ffd5b95602085013595506040909401359392505050565b5f60208284031215610787575f5ffd5b81518015158114610796575f5ffd5b9392505050565b634e487b7160e01b5f52601160045260245ffd5b808201808211156107c4576107c461079d565b92915050565b5f600182016107db576107db61079d565b506001019056fea2646970667358221220321a0af6ff86b4cf2ac85994389e8bceacc6c0b5e9ce5a0382946695d9b5128664736f6c63430008230033';
+
+// Full ABI for USDCTimeLock — مُحدَّث مع topUp و ToppedUp event
+const TIMELOCK_ABI = [
+  {"inputs":[{"internalType":"address","name":"_usdc","type":"address"}],"stateMutability":"nonpayable","type":"constructor"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":true,"internalType":"address","name":"beneficiary","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"}],"name":"Locked","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"id","type":"uint256"},{"internalType":"uint256","name":"addedAmount","type":"uint256"},{"internalType":"uint256","name":"newTotal","type":"uint256"}],"name":"ToppedUp","type":"event"},
+  {"anonymous":false,"inputs":[{"indexed":true,"internalType":"uint256","name":"id","type":"uint256"},{"indexed":true,"internalType":"address","name":"beneficiary","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"Withdrawn","type":"event"},
+  {"inputs":[{"internalType":"uint256","name":"id","type":"uint256"}],"name":"getLock","outputs":[{"internalType":"address","name":"","type":"address"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"uint256","name":"","type":"uint256"},{"internalType":"bool","name":"","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"address","name":"beneficiary","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"}],"name":"lock","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[],"name":"lockCount","outputs":[{"internalType":"uint256","name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"","type":"uint256"}],"name":"locks","outputs":[{"internalType":"address","name":"beneficiary","type":"address"},{"internalType":"uint256","name":"amount","type":"uint256"},{"internalType":"uint256","name":"unlockTime","type":"uint256"},{"internalType":"bool","name":"withdrawn","type":"bool"}],"stateMutability":"view","type":"function"},
+  {"inputs":[],"name":"usdcToken","outputs":[{"internalType":"address","name":"","type":"address"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"lockId","type":"uint256"}],"name":"withdraw","outputs":[],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"internalType":"uint256","name":"lockId","type":"uint256"},{"internalType":"uint256","name":"amount","type":"uint256"}],"name":"topUp","outputs":[],"stateMutability":"nonpayable","type":"function"}
+];
+
+// Minimal ERC-20 ABI
+const ERC20_ABI = [
+  {"inputs":[{"name":"spender","type":"address"},{"name":"amount","type":"uint256"}],"name":"approve","outputs":[{"name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"},
+  {"inputs":[{"name":"account","type":"address"}],"name":"balanceOf","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"name":"owner","type":"address"},{"name":"spender","type":"address"}],"name":"allowance","outputs":[{"name":"","type":"uint256"}],"stateMutability":"view","type":"function"},
+  {"inputs":[{"name":"to","type":"address"},{"name":"amount","type":"uint256"}],"name":"transfer","outputs":[{"name":"","type":"bool"}],"stateMutability":"nonpayable","type":"function"}
+];
+
+// ─────────────────────────────────────────────
+//  STATE
+// ─────────────────────────────────────────────
+let currentNet = 'main';
+let provider   = null;
+let lockWallet = null; // { address, wallet (ethers.Wallet), pk }
+let lockParams = {};
+let cdInterval        = null;
+
+// ─────────────────────────────────────────────
+//  INIT
+// ─────────────────────────────────────────────
+window.addEventListener('load', () => {
+  applyNet('main');
+  const d = new Date(Date.now() + 2 * 3600 * 1000);
+  const pad = n => String(n).padStart(2, '0');
+  document.getElementById('lockDate').value = `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+});
+
+function buildProvider(net) {
+  const cfg = NETS[net];
+  const networkish = { chainId: cfg.chainId, name: net === 'main' ? 'polygon' : 'polygon-amoy' };
+  const urls = [cfg.rpc, ...(cfg.rpcFallbacks || [])];
+  // batchMaxCount:1 يعطّل تجميع الطلبات (batching) — كثير من عقد RPC المجانية
+  // لا تدعمه وترجع خطأ 500 عاماً بغض النظر عن العنوان أو الشبكة المستخدمة
+  const opts = { batchMaxCount: 1 };
+
+  if (urls.length === 1) {
+    return new ethers.JsonRpcProvider(urls[0], networkish, opts);
+  }
+
+  // مزوّد بديل تلقائي: يجرّب أول رابط فوراً، وإن تعطّل (خطأ 500، rate-limit، إلخ)
+  // ينتقل للرابط التالي دون تدخل المستخدم — quorum:1 يعني الاكتفاء برد ناجح واحد
+  // ⚠️ هذا المزوّد للقراءة فقط (رصيد، بيانات القفل) — لا يُستخدم لبث المعاملات
+  const providers = urls.map((u, i) => ({
+    provider:     new ethers.JsonRpcProvider(u, networkish, opts),
+    priority:     i,
+    stallTimeout: i === 0 ? 0 : 600,
+    weight:       1
+  }));
+  return new ethers.FallbackProvider(providers, networkish, { quorum: 1 });
+}
+
+// مزوّد بمعاملة واحدة فقط — يُستخدم حصراً لتوقيع/بث المعاملات (approve, lock, transfer, unlock)
+// لأن FallbackProvider يبث نفس المعاملة الموقّعة لعدة عقد RPC في آن واحد، فيرجع بعضها
+// خطأ "already known" (لأنها وصلت مسبقاً عبر عقدة أخرى) ولا يستطيع ethers توفيق
+// النتائج المتعارضة، فيظهر خطأ "could not coalesce" رغم أن المعاملة قد تكون نجحت فعلياً
+function buildTxProvider(net) {
+  const cfg = NETS[net];
+  const networkish = { chainId: cfg.chainId, name: net === 'main' ? 'polygon' : 'polygon-amoy' };
+  return new ethers.JsonRpcProvider(cfg.rpc, networkish, { batchMaxCount: 1 });
+}
+
+function buildWallet(pk, net) {
+  const p = buildTxProvider(net);
+  const w = new ethers.Wallet(pk.startsWith('0x') ? pk : '0x' + pk, p);
+  return { wallet: w, provider: p, address: w.address };
+}
+
+function applyTheme(theme){
+  document.documentElement.setAttribute('data-theme', theme);
+  var meta = document.querySelector('meta[name="theme-color"]');
+  if(meta) meta.setAttribute('content', theme === 'dark' ? '#0b0b0d' : '#f2f2f7');
+}
+function toggleTheme(){
+  var current = document.documentElement.getAttribute('data-theme') || 'light';
+  var next = current === 'dark' ? 'light' : 'dark';
+  applyTheme(next);
+  try{ localStorage.setItem('theme', next); }catch(e){}
+}
+applyTheme(document.documentElement.getAttribute('data-theme') || 'light');
+
+function switchNet(net) {
+  applyNet(net);
+  if (lockWallet) onPKInput();
+
+  // إعادة الفحص التلقائي عند تبديل الشبكة، في حال كان المستخدم قد اختار
+  // شبكة خاطئة سابقاً وهناك عنوان تخزين معبأ بالفعل في هذه التبويبات.
+  const unlockAddr = document.getElementById('unlockContractAddr').value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(unlockAddr)) autoCheckUnlock();
+
+  const watchAddr = document.getElementById('watchContractAddr').value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(watchAddr)) watchLock();
+
+  const topupAddr = document.getElementById('topupContractAddr').value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(topupAddr)) checkTopupLock();
+}
+
+function applyNet(net) {
+  currentNet = net;
+  provider   = buildProvider(net);
+  document.getElementById('btnMain').className     = 'net-btn' + (net === 'main' ? ' am' : '');
+  document.getElementById('btnTest').className     = 'net-btn' + (net === 'test' ? ' at' : '');
+}
+
+// ─────────────────────────────────────────────
+//  PK INPUT
+// ─────────────────────────────────────────────
+let pkTimer = null;
+function onPKInput() {
+  clearTimeout(pkTimer);
+  pkTimer = setTimeout(processPK, 400);
+}
+
+async function processPK() {
+  let pk = document.getElementById('lockPK').value.trim();
+  if (pk.startsWith('0x')) pk = pk.slice(2);
+  if (!/^[0-9a-fA-F]{64}$/.test(pk)) {
+    document.getElementById('pkInfo').style.display = 'none';
+    document.getElementById('pkMATIC').textContent = '0.0000';
+    document.getElementById('pkUSDC').textContent  = '0.0000';
+    document.getElementById('pkPolAlert').style.display = 'none';
+    lockWallet = null;
+    return;
+  }
+  try {
+    const { wallet, address } = buildWallet(pk, currentNet);
+    lockWallet = { address, wallet, pk };
+
+    document.getElementById('pkAddr').textContent  = address;
+    document.getElementById('pkInfo').style.display = 'block';
+    document.getElementById('pkMATIC').textContent = '...';
+    document.getElementById('pkUSDC').textContent  = '...';
+    const alertEl = document.getElementById('pkPolAlert');
+    alertEl.style.display = 'none';
+
+    // نستخدم allSettled (وليس all) + نسخاً صارمة لا تُخفي الخطأ خلف صفر،
+    // حتى نعرض السبب الحقيقي لفشل جلب الرصيد بدل عرض 0.0000 بصمت
+    const [maticRes, usdcRes] = await Promise.allSettled([
+      fetchMATICBalStrict(address),
+      fetchUSDCBalStrict(address)
+    ]);
+
+    if (maticRes.status === 'rejected' || usdcRes.status === 'rejected') {
+      const err = maticRes.reason || usdcRes.reason;
+      const msg = err?.shortMessage || err?.info?.error?.message || err?.message || 'خطأ غير معروف من عقدة RPC';
+      document.getElementById('pkMATIC').textContent = maticRes.status === 'fulfilled' ? maticRes.value.toFixed(4) + ' POL' : '—';
+      document.getElementById('pkUSDC').textContent  = usdcRes.status  === 'fulfilled' ? usdcRes.value.toFixed(4)  + ' USDC' : '—';
+      alertEl.style.display   = 'block';
+      alertEl.style.color     = 'var(--danger)';
+      alertEl.style.background= 'rgba(255,59,48,.08)';
+      alertEl.textContent     = '❌ تعذر جلب الرصيد من الشبكة: ' + msg;
+      console.error('processPK balance fetch error:', err);
+      return;
+    }
+
+    const maticBal = maticRes.value;
+    const usdcBal  = usdcRes.value;
+    document.getElementById('pkMATIC').textContent = maticBal.toFixed(4) + ' POL';
+    document.getElementById('pkUSDC').textContent  = usdcBal.toFixed(4)  + ' USDC';
+    alertEl.style.color      = 'var(--warn)';
+    alertEl.style.background = 'rgba(255,149,0,.08)';
+    alertEl.textContent      = '⚠️ رصيد POL صفر — يجب امتلاك بعض POL في هذا العنوان لدفع رسوم الشبكة';
+    alertEl.style.display    = maticBal === 0 ? 'block' : 'none';
+
+    if (document.getElementById('lockBeneSelf').checked) {
+      document.getElementById('lockBene').value = address;
+    }
+  } catch(e) { console.warn(e); }
+}
+
+// ─────────────────────────────────────────────
+//  BENEFICIARY FIELD
+// ─────────────────────────────────────────────
+function toggleBeneSelf() {
+  const self  = document.getElementById('lockBeneSelf').checked;
+  const input = document.getElementById('lockBene');
+  input.disabled = self;
+  clearAlert(document.getElementById('lockBeneAlert'));
+  if (self) {
+    input.value = lockWallet ? lockWallet.address : '';
+  } else {
+    input.value = '';
+    input.focus();
+  }
+}
+
+async function pasteBeneficiary() {
+  const alertEl = document.getElementById('lockBeneAlert');
+  if (document.getElementById('lockBeneSelf').checked) {
+    showAlert(alertEl, '⚠️ أوقف خيار "أنا المستفيد" أولاً لإدخال عنوان مستفيد آخر', 'warn');
+    return;
+  }
+  clearAlert(alertEl);
+  await pasteToField('lockBene');
+}
+
+// ─────────────────────────────────────────────
+//  BALANCE HELPERS
+// ─────────────────────────────────────────────
+async function fetchMATICBal(address) {
+  try {
+    const bal = await provider.getBalance(address);
+    return parseFloat(ethers.formatEther(bal));
+  } catch (e) { console.error('fetchMATICBal error:', e); return 0; }
+}
+
+async function fetchUSDCBal(address) {
+  try {
+    const c = new ethers.Contract(NETS[currentNet].usdc, ERC20_ABI, provider);
+    const bal = await c.balanceOf(address);
+    return parseFloat(ethers.formatUnits(bal, NETS[currentNet].usdcDecimals));
+  } catch (e) { console.error('fetchUSDCBal error:', e); return 0; }
+}
+
+// نسخ "صارمة" لا تكتم الخطأ خلف صفر — تُستخدم في processPK لتشخيص مشاكل RPC الفعلية
+async function fetchMATICBalStrict(address) {
+  const bal = await provider.getBalance(address);
+  return parseFloat(ethers.formatEther(bal));
+}
+async function fetchUSDCBalStrict(address) {
+  const c = new ethers.Contract(NETS[currentNet].usdc, ERC20_ABI, provider);
+  const bal = await c.balanceOf(address);
+  return parseFloat(ethers.formatUnits(bal, NETS[currentNet].usdcDecimals));
+}
+
+// ─────────────────────────────────────────────
+//  SEED PHRASE (كلمات الاسترجاع) MODE
+//  يشتق مفاتيح متعددة من العبارة ويبحث عن أول
+//  عنوان به رصيد كافٍ لاستخدامه بدلاً من إدخال
+//  مفتاح خاص واحد يدوياً.
+// ─────────────────────────────────────────────
+const SEED_DERIVE_PATH = i => `m/44'/60'/0'/0/${i}`;
+const SEED_MAX_SCAN     = 20;
+
+function setKeyMode(prefix, mode) {
+  const pkBtn   = document.getElementById(prefix + 'ModeBtn-pk');
+  const seedBtn = document.getElementById(prefix + 'ModeBtn-seed');
+  const pkBox   = document.getElementById(prefix + 'PkBox');
+  const seedBox = document.getElementById(prefix + 'SeedBox');
+  if (mode === 'seed') {
+    pkBtn.classList.remove('active');   seedBtn.classList.add('active');
+    pkBox.style.display = 'none';       seedBox.style.display = 'block';
+  } else {
+    seedBtn.classList.remove('active'); pkBtn.classList.add('active');
+    seedBox.style.display = 'none';     pkBox.style.display = 'block';
+  }
+}
+
+// يضع علامة ✅ على تبويب "مفتاح خاص" ليعرف المستخدم أن هناك مفتاحاً مُعبّأ
+// حتى وهو لا يزال يشاهد تبويب "كلمات الاسترجاع"، دون الحاجة للتبديل بينهما.
+function markPkLoaded(prefix, loaded) {
+  const btn = document.getElementById(prefix + 'ModeBtn-pk');
+  if (!btn) return;
+  btn.innerHTML = loaded ? '🔑 مفتاح خاص <span style="color:var(--success)">● محمّل</span>' : '🔑 مفتاح خاص';
+}
+
+function triggerPKProcessing(prefix) {
+  if (prefix === 'lock')        processPK();
+  else if (prefix === 'topup')  onTopupPKInput();
+  else if (prefix === 'unlock') autoCheckUnlock();
+}
+
+async function scanSeed(prefix) {
+  const statusEl  = document.getElementById(prefix + 'SeedStatus');
+  const seedEl    = document.getElementById(prefix + 'Seed');
+  const summaryEl = document.getElementById(prefix + 'SeedSummary');
+  clearAlert(statusEl);
+  markPkLoaded(prefix, false);
+  if (summaryEl) { summaryEl.style.display = 'none'; summaryEl.innerHTML = ''; }
+
+  const raw = seedEl.value.trim().replace(/\s+/g, ' ');
+  if (!validateMnemonicInput(raw, statusEl)) return;
+
+  if (prefix === 'unlock') { await scanSeedForGas(prefix, raw, statusEl); return; }
+  await scanSeedAggregate(prefix, raw, statusEl, summaryEl);
+}
+
+function validateMnemonicInput(raw, statusEl) {
+  const words = raw ? raw.split(' ') : [];
+  if (![12, 15, 18, 21, 24].includes(words.length)) {
+    showAlert(statusEl, `⚠️ عدد كلمات الاسترجاع غير صحيح (المُدخَل حالياً: ${words.length} كلمة). يجب أن يكون 12 أو 15 أو 18 أو 21 أو 24 كلمة.`, 'danger');
+    return false;
+  }
+  let isValid = false;
+  try { isValid = ethers.Mnemonic.isValidMnemonic(raw); } catch (e) { isValid = false; }
+  if (!isValid) {
+    showAlert(statusEl, '❌ كلمات الاسترجاع غير صحيحة، تحقق من الإملاء والترتيب.', 'danger');
+    return false;
+  }
+  return true;
+}
+
+function shortAddr(a) { return a.slice(0, 6) + '...' + a.slice(-4); }
+
+function renderAddrTable(results) {
+  const rows = results.filter(r => r.polBal > 0 || r.usdcBal > 0).map(r => `
+    <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid var(--border);font-size:.72rem">
+      <span style="color:var(--muted2)">#${r.index} · ${shortAddr(r.address)}</span>
+      <span style="display:flex;gap:10px;white-space:nowrap">
+        <span style="color:var(--accent2)">${r.polBal.toFixed(4)} POL</span>
+        <span style="color:var(--usdt)">${r.usdcBal.toFixed(4)} USDC</span>
+      </span>
+    </div>`).join('');
+  return `<div style="background:var(--bg);border:1px solid var(--border);border-radius:10px;padding:8px 10px;margin-top:6px">${rows || '<div style="font-size:.72rem;color:var(--muted);padding:6px 0">لا يوجد رصيد ظاهر في العناوين المفحوصة</div>'}</div>`;
+}
+
+// ─── وضع "سحب": نبحث أولاً عن العنوان الذي يطابق المستفيد الفعلي لهذا القفل ───
+async function scanSeedForGas(prefix, raw, statusEl) {
+  const contractAddr = document.getElementById('unlockContractAddr').value.trim();
+  let beneficiary = null;
+
+  if (contractAddr && /^0x[0-9a-fA-F]{40}$/.test(contractAddr)) {
+    try {
+      showAlert(statusEl, '🔍 جارٍ قراءة عنوان المستفيد من عقد القفل...', 'info');
+      const timeLock = new ethers.Contract(contractAddr, TIMELOCK_ABI, provider);
+      const [bene, amount] = await timeLock.getLock(0n);
+      if (amount && amount > 0n) beneficiary = bene.toLowerCase();
+    } catch (e) { /* تجاوز — سنكمل بالبحث القديم إن تعذّرت القراءة */ }
+  }
+
+  // ── إن عرفنا المستفيد: ابحث بين كل العناوين المشتقة عن العنوان الذي يطابقه بالضبط ──
+  if (beneficiary) {
+    for (let i = 0; i < SEED_MAX_SCAN; i++) {
+      showAlert(statusEl, `🔍 جارٍ البحث عن عنوان المستفيد (${i + 1} من ${SEED_MAX_SCAN})...`, 'info');
+      let hd;
+      try { hd = ethers.HDNodeWallet.fromPhrase(raw, undefined, SEED_DERIVE_PATH(i)); }
+      catch (e) { showAlert(statusEl, '❌ تعذّر اشتقاق المفاتيح من هذه الكلمات: ' + e.message, 'danger'); return; }
+
+      if (hd.address.toLowerCase() === beneficiary) {
+        document.getElementById(prefix + 'PK').value = hd.privateKey;
+        markPkLoaded(prefix, true);
+        let polBal = 0;
+        try { polBal = await fetchMATICBal(hd.address); } catch (e) { /* تجاوز */ }
+
+        if (polBal > 0) {
+          showAlert(statusEl, `✅ تم إيجاد عنوان المستفيد رقم ${i} (${shortAddr(hd.address)}) برصيد ${polBal.toFixed(4)} POL — تم تعبئة مفتاحه الخاص تلقائياً، وجارٍ فحص القفل...`, 'success');
+          triggerPKProcessing(prefix);
+          return;
+        }
+
+        // رصيد POL صفر في عنوان المستفيد — ابحث عن عنوان آخر في نفس المحفظة يملك POL
+        // وحوّل منه تلقائياً كمية بسيطة تكفي رسوم السحب، تماماً كما في تجميع
+        // الأرصدة عند إنشاء القفل (نفس آلية consolidateSeed).
+        showAlert(statusEl, `🔍 تم إيجاد عنوان المستفيد رقم ${i} (${shortAddr(hd.address)}) لكن رصيد POL فيه صفر — جارٍ البحث عن عنوان آخر في محفظتك لتحويل رسوم السحب منه...`, 'info');
+
+        let donor = null;
+        for (let j = 0; j < SEED_MAX_SCAN; j++) {
+          if (j === i) continue;
+          let hdj;
+          try { hdj = ethers.HDNodeWallet.fromPhrase(raw, undefined, SEED_DERIVE_PATH(j)); }
+          catch (e) { continue; }
+          let pj = 0;
+          try { pj = await fetchMATICBal(hdj.address); } catch (e) { continue; }
+          if (pj > 0) { donor = { address: hdj.address, privateKey: hdj.privateKey, polBal: pj, index: j }; break; }
+        }
+
+        if (!donor) {
+          showAlert(statusEl, `⚠️ تم إيجاد عنوان المستفيد رقم ${i} (${shortAddr(hd.address)}) وتعبئة مفتاحه الخاص تلقائياً، لكن رصيد POL فيه صفر ولم يُعثر على أي عنوان آخر في محفظتك يملك POL. أضف كمية بسيطة من POL يدوياً لدفع رسوم السحب.`, 'warn');
+          triggerPKProcessing(prefix);
+          return;
+        }
+
+        try {
+          const gasOv = await getGasOverrides();
+          const feePerGas = gasOv.maxFeePerGas || gasOv.gasPrice || ethers.parseUnits('35', 'gwei');
+          const topupWei = feePerGas * 150000n; // كافٍ لتغطية معاملة withdraw واحدة على العقد
+          showAlert(statusEl, `⛽ جارٍ تحويل ${ethers.formatEther(topupWei)} POL من العنوان رقم ${donor.index} (${shortAddr(donor.address)}) إلى عنوان المستفيد لتغطية رسوم السحب...`, 'info');
+          const donorWallet = new ethers.Wallet(donor.privateKey, buildTxProvider(currentNet));
+          const tx = await donorWallet.sendTransaction({ to: hd.address, value: topupWei, ...gasOv });
+          await tx.wait();
+          showAlert(statusEl, `✅ تم إيجاد عنوان المستفيد رقم ${i} (${shortAddr(hd.address)}) وتعبئة مفتاحه الخاص تلقائياً، وتم تحويل ${ethers.formatEther(topupWei)} POL إليه من عنوان آخر في محفظتك لتغطية رسوم السحب — جارٍ فحص القفل...`, 'success');
+        } catch (e) {
+          showAlert(statusEl, `⚠️ تم إيجاد عنوان المستفيد رقم ${i} (${shortAddr(hd.address)}) لكن تعذّر تحويل رسوم POL تلقائياً إليه: ${e.reason || e.message}. أضف كمية بسيطة من POL يدوياً.`, 'warn');
+        }
+
+        triggerPKProcessing(prefix);
+        return;
+      }
+    }
+    showAlert(statusEl, `❌ لم يتم العثور على عنوان المستفيد (${shortAddr(beneficiary)}) ضمن أول ${SEED_MAX_SCAN} عنوان مشتق من هذه الكلمات. تحقق من كلمات الاسترجاع أو أدخل مفتاحه الخاص يدوياً.`, 'danger');
+    return;
+  }
+
+  // ── لا يمكن معرفة المستفيد (لم يُدخَل عنوان تخزين صحيح بعد): نعود للبحث القديم عن أول عنوان به POL ──
+  for (let i = 0; i < SEED_MAX_SCAN; i++) {
+    showAlert(statusEl, `🔍 جارٍ فحص العنوان ${i + 1} من ${SEED_MAX_SCAN}...`, 'info');
+    let hd;
+    try { hd = ethers.HDNodeWallet.fromPhrase(raw, undefined, SEED_DERIVE_PATH(i)); }
+    catch (e) { showAlert(statusEl, '❌ تعذّر اشتقاق المفاتيح من هذه الكلمات: ' + e.message, 'danger'); return; }
+
+    let polBal = 0;
+    try { polBal = await fetchMATICBal(hd.address); } catch (e) { /* تجاوز عند فشل الاستعلام */ }
+
+    if (polBal > 0) {
+      document.getElementById(prefix + 'PK').value = hd.privateKey;
+      markPkLoaded(prefix, true);
+      showAlert(statusEl, `⚠️ لم يتم إدخال عنوان تخزين صالح بعد، فتعذّر التأكد من هوية المستفيد. تم استخدام أول عنوان به رصيد: رقم ${i} (${shortAddr(hd.address)}) برصيد ${polBal.toFixed(4)} POL — أدخل عنوان التخزين أولاً لبحث أدق.`, 'warn');
+      triggerPKProcessing(prefix);
+      return;
+    }
+  }
+  showAlert(statusEl, `❌ لم يتم العثور على أي عنوان به رصيد POL ضمن أول ${SEED_MAX_SCAN} عنوان مشتق من هذه الكلمات.`, 'danger');
+}
+
+// ─── وضع "قفل/زيادة رصيد": فحص شامل لكل العناوين + تجميع الأرصدة تلقائياً عند تفرقها ───
+async function scanSeedAggregate(prefix, raw, statusEl, summaryEl) {
+  const results = [];
+  for (let i = 0; i < SEED_MAX_SCAN; i++) {
+    showAlert(statusEl, `🔍 جارٍ فحص العنوان ${i + 1} من ${SEED_MAX_SCAN}...`, 'info');
+    let hd;
+    try { hd = ethers.HDNodeWallet.fromPhrase(raw, undefined, SEED_DERIVE_PATH(i)); }
+    catch (e) { showAlert(statusEl, '❌ تعذّر اشتقاق المفاتيح من هذه الكلمات: ' + e.message, 'danger'); return; }
+
+    let polBal = 0, usdcBal = 0;
+    try { [polBal, usdcBal] = await Promise.all([fetchMATICBal(hd.address), fetchUSDCBal(hd.address)]); }
+    catch (e) { /* تجاوز هذا العنوان عند فشل الاستعلام */ }
+
+    results.push({ address: hd.address, privateKey: hd.privateKey, index: i, polBal, usdcBal });
+  }
+
+  const withUsdc = results.filter(r => r.usdcBal > 0);
+  const withPol  = results.filter(r => r.polBal  > 0);
+  const netLbl   = currentNet === 'main' ? 'الشبكة الرئيسية' : 'الشبكة التجريبية';
+
+  if (withUsdc.length === 0 && withPol.length === 0) {
+    showAlert(statusEl, `❌ لم يتم العثور على أي عنوان به رصيد USDC أو POL ضمن أول ${SEED_MAX_SCAN} عنوان مشتق من هذه الكلمات على ${netLbl}.`, 'danger');
+    return;
+  }
+
+  // الحالة المثالية: عنوان واحد فقط يملك USDC وهو نفسه يملك POL → استخدامه مباشرة دون تجميع
+  if (withUsdc.length === 1 && withUsdc[0].polBal > 0) {
+    const w = withUsdc[0];
+    document.getElementById(prefix + 'PK').value = w.privateKey;
+    markPkLoaded(prefix, true);
+    triggerPKProcessing(prefix);
+    const purposeTxt = prefix === 'topup' ? 'لزيادة الرصيد على هذا القفل' : 'لإنشاء هذا القفل';
+    showAlert(statusEl, `✅ تم اختيار عنوان (${shortAddr(w.address)}) من محفظتك ${purposeTxt}.`, 'success');
+    return;
+  }
+
+  // لا يوجد USDC إطلاقاً، لكن يوجد POL في مكانٍ ما → استخدامه كما السابق مع تنبيه
+  if (withUsdc.length === 0 && withPol.length > 0) {
+    const w = withPol[0];
+    document.getElementById(prefix + 'PK').value = w.privateKey;
+    markPkLoaded(prefix, true);
+    triggerPKProcessing(prefix);
+    showAlert(statusEl, `⚠️ لا يوجد رصيد USDC في أي عنوان، تم استخدام العنوان رقم ${w.index} (${shortAddr(w.address)}) لأنه يملك POL فقط لرسوم الشبكة (انظر الرصيد المعروض أسفل الحقل).`, 'warn');
+    return;
+  }
+
+  // الحالة المتفرقة: USDC وPOL موزّعان على عناوين مختلفة (أو أكثر من عنوان به USDC)
+  const gasCandidate = withPol.length ? withPol.slice().sort((a, b) => b.polBal - a.polBal)[0] : null;
+  seedScanState[prefix] = { results, netKey: currentNet, gasIndex: gasCandidate ? gasCandidate.index : null, mnemonic: raw };
+
+  const totalUsdc = withUsdc.reduce((s, r) => s + r.usdcBal, 0);
+
+  if (summaryEl) {
+    summaryEl.style.display = 'block';
+    let html = renderAddrTable(results);
+    if (gasCandidate) {
+      html += `<button type="button" class="btn btn-outline mt8" id="${prefix}ConsolidateBtn" onclick="consolidateSeed('${prefix}')">🔄 تجميع الأرصدة في عنوان واحد (عنوان الغاز #${gasCandidate.index})</button>`;
+    }
+    summaryEl.innerHTML = html;
+  }
+
+  if (!gasCandidate) {
+    showAlert(statusEl, `⚠️ الرصيد الإجمالي ${totalUsdc.toFixed(4)} USDC موزّع على ${withUsdc.length} عنوان، لكن لا يوجد POL لدفع رسوم أي معاملة في أي منها. أرسل بعض POL يدوياً لأحد هذه العناوين ثم أعد البحث.`, 'danger');
+  } else {
+    showAlert(statusEl, `⚠️ الرصيد موزّع على أكثر من عنوان (الإجمالي ${totalUsdc.toFixed(4)} USDC). اضغط زر التجميع أدناه لتحويل كل USDC تلقائياً إلى العنوان الذي يملك POL لدفع الرسوم.`, 'warn');
+  }
+}
+
+let seedScanState = {}; // per-prefix: { results, gasIndex, netKey }
+
+// ─── تجميع كل USDC الموزّع على عناوين المحفظة في عنوان الغاز (الذي يملك POL) ───
+async function consolidateSeed(prefix) {
+  const state    = seedScanState[prefix];
+  const statusEl = document.getElementById(prefix + 'SeedStatus');
+  const summaryEl = document.getElementById(prefix + 'SeedSummary');
+  const btn      = document.getElementById(prefix + 'ConsolidateBtn');
+
+  if (!state || state.gasIndex === null) { showAlert(statusEl, '❌ لا يوجد عنوان يملك POL لدفع رسوم التجميع.', 'danger'); return; }
+  if (state.netKey !== currentNet) { showAlert(statusEl, '⚠️ تم تغيير الشبكة، أعد البحث عن العناوين أولاً.', 'danger'); return; }
+
+  if (btn) { btn.disabled = true; btn.textContent = '⏳ جارٍ التجميع...'; }
+
+  const results  = state.results;
+  const gasAddr  = results.find(r => r.index === state.gasIndex);
+  const gasWallet = new ethers.Wallet(gasAddr.privateKey, buildTxProvider(currentNet));
+  const targets  = results.filter(r => r.index !== state.gasIndex && r.usdcBal > 0);
+
+  const log = [];
+  const renderLog = () => {
+    if (summaryEl) summaryEl.innerHTML = renderAddrTable(results) + `<div style="margin-top:8px;font-size:.72rem;line-height:1.8">${log.join('<br/>')}</div>`;
+  };
+
+  if (targets.length === 0) {
+    showAlert(statusEl, 'ℹ️ لا يوجد رصيد USDC في عناوين أخرى لتجميعه.', 'info');
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 تجميع الأرصدة في عنوان واحد'; }
+    return;
+  }
+
+  let gasOv, topupWei;
+  try {
+    gasOv = await getGasOverrides();
+    const feePerGas = gasOv.maxFeePerGas || gasOv.gasPrice || ethers.parseUnits('35', 'gwei');
+    topupWei = feePerGas * 90000n; // يكفي لتغطية معاملة transfer واحدة على العنوان الهدف
+  } catch (e) {
+    showAlert(statusEl, '❌ تعذّر قراءة سعر الغاز الحالي: ' + e.message, 'danger');
+    if (btn) { btn.disabled = false; btn.textContent = '🔄 تجميع الأرصدة في عنوان واحد'; }
+    return;
+  }
+
+  for (const t of targets) {
+    try {
+      showAlert(statusEl, `🔄 جارٍ تجميع رصيد العنوان #${t.index}...`, 'info');
+
+      const curPolWei = await provider.getBalance(t.address);
+      if (curPolWei < topupWei) {
+        log.push(`⛽ إرسال ${ethers.formatEther(topupWei)} POL لتغطية رسوم #${t.index}...`);
+        renderLog();
+        const tx1 = await gasWallet.sendTransaction({ to: t.address, value: topupWei, ...gasOv });
+        await tx1.wait();
+        log.push(`✅ تم تزويد #${t.index} بالغاز`);
+        renderLog();
+      }
+
+      const srcWallet = new ethers.Wallet(t.privateKey, buildTxProvider(currentNet));
+      const usdcSrc   = new ethers.Contract(NETS[currentNet].usdc, ERC20_ABI, srcWallet);
+      const liveBal   = await usdcSrc.balanceOf(t.address);
+      if (liveBal === 0n) { log.push(`ℹ️ العنوان #${t.index} لا يملك USDC فعلياً الآن، تم تخطيه.`); renderLog(); continue; }
+
+      const tx2 = await usdcSrc.transfer(gasAddr.address, liveBal, gasOv);
+      await tx2.wait();
+      log.push(`✅ تم تحويل ${ethers.formatUnits(liveBal, NETS[currentNet].usdcDecimals)} USDC من #${t.index} إلى عنوان الغاز`);
+      renderLog();
+
+      t.usdcBal = 0; // تحديث محلي لعرض الجدول
+    } catch (e) {
+      log.push(`❌ فشل تجميع العنوان #${t.index}: ${e.reason || e.message}`);
+      renderLog();
+    }
+  }
+
+  const [finalPol, finalUsdc] = await Promise.all([fetchMATICBal(gasAddr.address), fetchUSDCBal(gasAddr.address)]);
+  gasAddr.polBal = finalPol; gasAddr.usdcBal = finalUsdc;
+  renderLog();
+
+  document.getElementById(prefix + 'PK').value = gasAddr.privateKey;
+  markPkLoaded(prefix, true);
+  triggerPKProcessing(prefix);
+
+  showAlert(statusEl, `✅ تم التجميع في العنوان #${state.gasIndex} (${shortAddr(gasAddr.address)}) — الرصيد الآن: ${finalUsdc.toFixed(4)} USDC / ${finalPol.toFixed(4)} POL (انظر الرصيد المعروض أسفل الحقل). يمكنك المتابعة مباشرة.`, 'success');
+
+  if (btn) { btn.disabled = false; btn.textContent = '🔄 تجميع الأرصدة في عنوان واحد'; }
+}
+
+// ─────────────────────────────────────────────
+//  PREVIEW UPDATER
+// ─────────────────────────────────────────────
+function updatePreview() {
+  const amt  = parseFloat(document.getElementById('lockAmt').value);
+  const date = document.getElementById('lockDate').value;
+  if (!amt || !date) { document.getElementById('lockPreview').style.display = 'none'; return; }
+  document.getElementById('lockPreview').style.display = 'block';
+  const ts     = new Date(date).getTime();
+  const durMs  = ts - Date.now();
+  document.getElementById('prvAmt').textContent  = amt.toFixed(4) + ' USDC';
+  document.getElementById('prvDate').textContent = new Date(date).toLocaleString('ar-MA');
+  document.getElementById('prvDur').textContent  = formatDuration(durMs);
+  document.getElementById('prvProg').style.width = '2%';
+  document.getElementById('prvProgLbl').textContent = '0% مكتمل — يبقى ' + formatDuration(durMs);
+}
+
+// ─────────────────────────────────────────────
+//  STEP NAVIGATION
+// ─────────────────────────────────────────────
+function setStep(n) {
+  for (let i = 1; i <= 4; i++) {
+    const el = document.getElementById('sn' + i);
+    if (!el) continue;
+    if (i < n || n === 4) el.className = 'step-num done';
+    else if (i === n)     el.className = 'step-num active';
+    else                  el.className = 'step-num';
+  }
+  ['lockStep1', 'lockStep2', 'lockStep3', 'lockStep4'].forEach((id, idx) => {
+    document.getElementById(id).style.display = (idx + 1 === n) ? 'block' : 'none';
+  });
+}
+
+async function goStep2() {
+  const alertEl = document.getElementById('lockStep1Alert');
+  clearAlert(alertEl);
+  if (!lockWallet) { showAlert(alertEl, 'أدخل المفتاح الخاص أولاً.', 'danger'); return; }
+
+  const amt  = parseFloat(document.getElementById('lockAmt').value);
+  const date = document.getElementById('lockDate').value;
+  const beneSelf = document.getElementById('lockBeneSelf').checked;
+  const bene = (beneSelf ? lockWallet.address : document.getElementById('lockBene').value.trim());
+
+  if (!amt || amt <= 0)            { showAlert(alertEl, 'أدخل كمية USDC صحيحة.', 'danger'); return; }
+  if (!date)                       { showAlert(alertEl, 'حدد تاريخ الإفراج.', 'danger'); return; }
+  if (!bene || !ethers.isAddress(bene)) { showAlert(alertEl, 'أدخل عنوان مستفيد صحيح.', 'danger'); return; }
+  const ts = Math.floor(new Date(date).getTime() / 1000);
+  if (ts <= Math.floor(Date.now() / 1000)) { showAlert(alertEl, 'يجب أن يكون تاريخ الإفراج في المستقبل.', 'danger'); return; }
+
+  lockParams = { amt, ts, bene };
+
+  const contract = await getOrDeployContract();
+  if (!contract) return;
+  lockParams.contract = contract;
+
+  const shortC = contract.slice(0, 10) + '...' + contract.slice(-8);
+  document.getElementById('approveContract').textContent = shortC;
+  document.getElementById('approveAmt').textContent      = amt.toFixed(4) + ' USDC';
+  document.getElementById('approveFrom').textContent     = lockWallet.address;
+  document.getElementById('approveBene').textContent     = bene;
+  setStep(2);
+}
+
+function backStep1() { setStep(1); }
+function backStep2() { setStep(2); }
+
+async function doApprove() {
+  const alertEl = document.getElementById('step2Alert');
+  clearAlert(alertEl);
+  const btn = document.getElementById('approveBtn');
+  const txt = document.getElementById('approveBtnTxt');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner"></span> جارٍ Approve...';
+
+  try {
+    const units = ethers.parseUnits(lockParams.amt.toString(), NETS[currentNet].usdcDecimals);
+    const usdcContract = new ethers.Contract(NETS[currentNet].usdc, ERC20_ABI, lockWallet.wallet);
+
+    showAlert(alertEl, '⏳ إرسال معاملة Approve...', 'info');
+    const gas = await getGasOverrides();
+    const tx = await usdcContract.approve(lockParams.contract, units, gas);
+    showAlert(alertEl, '⏳ في انتظار التأكيد... TX: ' + tx.hash.slice(0, 16) + '...', 'info');
+    await tx.wait(1);
+
+    showAlert(alertEl, '✅ Approve ناجح! Hash: ' + tx.hash.slice(0, 16) + '...', 'success');
+    setTimeout(() => {
+      document.getElementById('step3Amt').textContent  = lockParams.amt.toFixed(4);
+      document.getElementById('step3Bene').textContent = lockParams.bene.slice(0, 10) + '...' + lockParams.bene.slice(-6);
+      document.getElementById('step3Date').textContent = new Date(lockParams.ts * 1000).toLocaleString('ar-MA');
+      setStep(3);
+    }, 2000);
+  } catch(e) {
+    showAlert(alertEl, '❌ ' + (e.reason || e.message || String(e)), 'danger');
+  } finally {
+    btn.disabled = false;
+    txt.innerHTML = '✅ تنفيذ Approve';
+  }
+}
+
+async function doLock() {
+  const alertEl = document.getElementById('step3Alert');
+  clearAlert(alertEl);
+  const btn = document.getElementById('lockBtn');
+  const txt = document.getElementById('lockBtnTxt');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner spinner-dark"></span> جارٍ القفل...';
+
+  try {
+    const units     = ethers.parseUnits(lockParams.amt.toString(), NETS[currentNet].usdcDecimals);
+    const timeLock  = new ethers.Contract(lockParams.contract, TIMELOCK_ABI, lockWallet.wallet);
+
+    showAlert(alertEl, '⏳ إرسال معاملة القفل...', 'info');
+    const gas = await getGasOverrides();
+    const tx = await timeLock.lock(lockParams.bene, units, BigInt(lockParams.ts), gas);
+    showAlert(alertEl, '⏳ في انتظار التأكيد...', 'info');
+    const receipt = await tx.wait(1);
+
+    // Get lock ID from Locked event
+    let lockId = 0;
+    try {
+      const iface = new ethers.Interface(TIMELOCK_ABI);
+      for (const log of receipt.logs) {
+        try {
+          const parsed = iface.parseLog(log);
+          if (parsed && parsed.name === 'Locked') {
+            lockId = Number(parsed.args[0]);
+            break;
+          }
+        } catch {}
+      }
+    } catch {}
+
+    document.getElementById('lockFinalInfo').innerHTML = `
+      <div class="info-row"><span class="info-label">المبلغ</span><span class="info-value usdt">${lockParams.amt.toFixed(4)} USDC</span></div>
+      <div class="info-row" style="border:none"><span class="info-label">يُفرج عند</span><span class="info-value gold">${new Date(lockParams.ts * 1000).toLocaleString('ar-MA')}</span></div>
+
+      <div style="margin-top:10px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span style="font-size:.95rem;font-weight:800;color:var(--text)">عنوان التخزين</span>
+          <button class="copy-btn" onclick="copyEl('lockFinalContractAddr')" style="font-size:.72rem;padding:3px 10px;border:1px solid var(--border);border-radius:8px;color:var(--accent2)">📋 نسخ العنوان</button>
+        </div>
+        <div style="background:rgba(52,199,89,.12);border-radius:10px;padding:12px 14px">
+          <div id="lockFinalContractAddr" style="font-family:'SF Mono',ui-monospace,monospace;font-size:.8rem;font-weight:800;color:var(--text);word-break:break-all;direction:ltr;text-align:left">${lockParams.contract}</div>
+        </div>
+      </div>`;
+    setStep(4);
+  } catch(e) {
+    showAlert(alertEl, '❌ ' + (e.reason || e.message || String(e)), 'danger');
+  } finally {
+    btn.disabled = false;
+    txt.innerHTML = '🔒 تأكيد القفل';
+  }
+}
+
+function resetLock() {
+  document.getElementById('lockPK').value  = '';
+  document.getElementById('lockAmt').value = '';
+  document.getElementById('lockBene').value = '';
+  document.getElementById('lockBeneSelf').checked = true;
+  document.getElementById('lockBene').disabled = true;
+  clearAlert(document.getElementById('lockBeneAlert'));
+  document.getElementById('pkInfo').style.display    = 'none';
+  document.getElementById('pkMATIC').textContent = '0.0000';
+  document.getElementById('pkUSDC').textContent  = '0.0000';
+  document.getElementById('pkPolAlert').style.display = 'none';
+  document.getElementById('lockPreview').style.display = 'none';
+  lockWallet = null; lockParams = {};
+  clearAlert(document.getElementById('lockStep1Alert'));
+  setStep(1);
+}
+
+// ─────────────────────────────────────────────
+//  CONTRACT DEPLOY / GET
+// ─────────────────────────────────────────────
+// التحقق من أن العقد المنشور يدعم topUp (selector: de643a71)
+async function contractSupportsTopUp(addr) {
+  try {
+    const code = await provider.getCode(addr);
+    // selector of topUp(uint256,uint256) = de643a71
+    return code.toLowerCase().includes('de643a71');
+  } catch { return false; }
+}
+
+async function getOrDeployContract() {
+  const alertEl = document.getElementById('lockStep1Alert');
+  try {
+    showAlert(alertEl, '📡 جارٍ إنشاء عنوان التخزين على Polygon... قد يستغرق 15-30 ثانية.', 'info');
+    const addr = await deployTimeLock();
+    clearAlert(alertEl);
+    toast('✅ تم إنشاء عنوان التخزين: ' + addr.slice(0, 10) + '...', 'success', 4000);
+    return addr;
+  } catch(e) {
+    showAlert(alertEl, '❌ فشل إنشاء عنوان التخزين: ' + (e.reason || e.message || String(e)), 'danger');
+    return null;
+  }
+}
+
+async function deployTimeLock() {
+  if (!lockWallet) throw new Error('لا توجد محفظة محملة');
+
+  const gas = await getGasOverrides();
+  const factory = new ethers.ContractFactory(TIMELOCK_ABI, TIMELOCK_BYTECODE, lockWallet.wallet);
+  const contract = await factory.deploy(NETS[currentNet].usdc, gas);
+  await contract.waitForDeployment();
+  return await contract.getAddress();
+}
+
+// ─────────────────────────────────────────────
+//  UNLOCK / WITHDRAW
+// ─────────────────────────────────────────────
+// ─────────────────────────────────────────────
+//  WATCH / MONITOR (read-only, no private key)
+// ─────────────────────────────────────────────
+// auto-trigger when contract address is filled and valid
+let watchContractTimer = null;
+function onWatchContractInput() {
+  clearTimeout(watchContractTimer);
+  const val = document.getElementById('watchContractAddr').value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(val)) {
+    watchContractTimer = setTimeout(watchLock, 700);
+  }
+}
+
+async function watchLock() {
+  const alertEl = document.getElementById('watchAlert');
+  clearAlert(alertEl);
+  document.getElementById('watchInfo').style.display = 'none';
+  document.getElementById('watchTopupBtnWrap').style.display = 'none';
+  document.getElementById('watchWithdrawBtnWrap').style.display = 'none';
+  document.getElementById('watchCountdown').style.display = 'none';
+  if (cdInterval) clearInterval(cdInterval);
+
+  const contractAddr = document.getElementById('watchContractAddr').value.trim();
+  if (!contractAddr || !/^0x[0-9a-fA-F]{40}$/.test(contractAddr)) { showAlert(alertEl, 'أدخل عنوان التخزين الصحيح (0x...).', 'danger'); return; }
+
+  const specificId = 0;
+
+  showAlert(alertEl, '🔍 جارٍ القراءة من البلوكشين...', 'info');
+
+  try {
+    const timeLock  = new ethers.Contract(contractAddr, TIMELOCK_ABI, provider);
+    const netConfig = NETS[currentNet];
+    const now       = Math.floor(Date.now() / 1000);
+
+    // ── وضع Lock ID محدد ──────────────────────────────────────
+    if (specificId !== null) {
+      const [bene, amount, unlockTime, withdrawn] = await timeLock.getLock(BigInt(specificId));
+      if (!amount || amount === 0n) { showAlert(alertEl, 'لم يتم العثور على هذا القفل (Lock ID غير موجود).', 'danger'); return; }
+
+      clearAlert(alertEl);
+      const amt       = parseFloat(ethers.formatUnits(amount, netConfig.usdcDecimals));
+      const uTime     = Number(unlockTime);
+      const remaining = uTime - now;
+      const unlocked  = remaining <= 0;
+
+      document.getElementById('watchInfo').style.display = 'block';
+      document.getElementById('watchDetails').innerHTML = `
+        <div class="info-row" style="display:none"><span class="info-label">Lock #</span><span class="info-value gold">${specificId}</span></div>
+        <div class="info-row" style="border:none;padding-bottom:0"><span class="info-label">المبلغ</span></div>
+        <div class="countdown-box amt-row">${staticDigitBoxes(amt.toFixed(2) + '$')}</div>
+        <div class="info-row" style="border:none;padding-bottom:0"><span class="info-label">المستفيد</span></div>
+        <div class="countdown-box" style="justify-content:center;align-items:center"><span class="info-value accent" style="font-size:1.8rem;direction:ltr">${bene.slice(0,7)}..${bene.slice(-5)}</span></div>
+        <div class="info-row" style="display:none"><span class="info-label">الحالة</span>
+          <span class="info-value">${withdrawn ? '✅ تم السحب' : unlocked ? '🔓 جاهز للسحب' : '🔒 مقفل'}</span>
+        </div>`;
+
+      const topupBtnWrap = document.getElementById('watchTopupBtnWrap');
+      topupBtnWrap.style.display = 'none';
+      if (!unlocked && !withdrawn) {
+        topupBtnWrap.style.display = 'block';
+        topupBtnWrap.querySelector('button').onclick = () => goToTopupFromWatch(contractAddr, specificId);
+      }
+      // زر السحب عند انتهاء القفل
+      const watchWithdrawWrap = document.getElementById('watchWithdrawBtnWrap');
+      if (unlocked && !withdrawn) {
+        watchWithdrawWrap.style.display = 'block';
+        watchWithdrawWrap.querySelector('button').onclick = () => goToWithdrawFromWatch(contractAddr);
+      } else {
+        watchWithdrawWrap.style.display = 'none';
+      }
+      // خانة حمراء توضّح أن هذا القفل تم سحبه بالفعل
+      document.getElementById('watchWithdrawnBadge').style.display = withdrawn ? 'block' : 'none';
+      const cd = document.getElementById('watchCountdown');
+      cd.style.display = 'flex';
+      if (cdInterval) clearInterval(cdInterval);
+      renderReleaseDateCard(cd, uTime);
+      return;
+    }
+
+    // ── وضع عرض الكل (بدون Lock ID) ────────────────────────────
+    const totalCount = Number(await timeLock.lockCount());
+    if (totalCount === 0) {
+      clearAlert(alertEl);
+      document.getElementById('watchInfo').style.display = 'block';
+      document.getElementById('watchDetails').innerHTML = '<div style="text-align:center;color:var(--muted);padding:20px;font-size:.76rem">لا توجد قفلات في عنوان التخزين هذا بعد.</div>';
+      return;
+    }
+
+    showAlert(alertEl, `⏳ جارٍ تحميل ${totalCount} قفل من البلوكشين...`, 'info');
+
+    const promises = [];
+    for (let i = 0; i < totalCount; i++) {
+      promises.push(
+        timeLock.getLock(BigInt(i))
+          .then(r => ({ id: i, bene: r[0], amount: r[1], unlockTime: r[2], withdrawn: r[3] }))
+          .catch(() => null)
+      );
+    }
+    const allLocks = (await Promise.all(promises)).filter(Boolean);
+    clearAlert(alertEl);
+
+    let totalLocked = 0, totalAll = 0;
+    let html = '';
+
+    for (const l of allLocks.slice().reverse()) {
+      const amt       = parseFloat(ethers.formatUnits(l.amount, netConfig.usdcDecimals));
+      const uTime     = Number(l.unlockTime);
+      const remaining = uTime - now;
+      const unlocked  = remaining <= 0;
+      totalAll += amt;
+      if (!l.withdrawn) totalLocked += amt;
+
+      const status    = l.withdrawn ? 'lb-unlocked' : unlocked ? 'lb-unlocked' : 'lb-locked';
+      const statusTxt = l.withdrawn ? '✅ تم السحب' : unlocked ? '🔓 جاهز' : '🔒 مقفل';
+
+      // شريط التقدم
+      const estimatedDuration = Math.max(uTime - (now - 86400 * 30), 1);
+      const estimatedStart    = uTime - estimatedDuration;
+      const elapsed           = now - estimatedStart;
+      let prog = l.withdrawn ? 100 : unlocked ? 100 : Math.min(100, Math.max(0, Math.round((elapsed / estimatedDuration) * 100)));
+      const progClass = l.withdrawn ? 'progress-fill withdrawn' : 'progress-fill';
+
+      html += `<div class="lock-item">
+        <div class="lock-item-header">
+          <div>
+            <span class="lock-badge ${status}">${statusTxt}</span>
+            <span class="lock-badge" style="background:rgba(59,130,246,.1);color:var(--accent2);border:1px solid rgba(59,130,246,.2);margin-right:5px">#${l.id}</span>
+          </div>
+          <div class="lock-amt">${amt.toFixed(4)} <span style="font-size:.65rem;color:var(--muted)">USDC</span></div>
+        </div>
+        <div class="lock-meta">المستفيد: <span style="font-family:monospace">${l.bene.slice(0,10)}...${l.bene.slice(-6)}</span></div>
+        <div class="lock-meta">يُفرج عند: ${new Date(uTime * 1000).toLocaleString('ar-MA', {dateStyle:'short', timeStyle:'short'})}</div>
+        <div class="progress-bar" style="margin:6px 0"><div class="${progClass}" style="width:${prog}%"></div></div>
+        <div style="display:flex;justify-content:space-between;font-size:.65rem;color:var(--muted)">
+          <span>${!l.withdrawn && !unlocked ? 'يبقى: ' + formatDuration(remaining * 1000) : (l.withdrawn ? '' : '🔓 انتهى القفل')}</span>
+          ${!l.withdrawn && !unlocked ? `<button class="btn-topup" onclick="goToTopupFromWatch('${contractAddr}', ${l.id})">➕ إيداع</button>` : ''}
+          ${unlocked && !l.withdrawn ? `<button class="btn-topup" style="background:rgba(52,199,89,.15);color:#28b84e" onclick="goToWithdrawFromWatch('${contractAddr}')"><img src="withdraw.png" alt="" style="width:13px;height:13px;vertical-align:middle;margin-left:3px"> سحب</button>` : ''}
+        </div>
+      </div>`;
+    }
+
+    // ملخص إجمالي
+    const summary = `<div style="background:var(--bg);border-radius:10px;padding:10px 14px;margin-bottom:10px;font-size:.74rem">
+      <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+        <span style="color:var(--muted)">إجمالي القفلات</span>
+        <span style="font-weight:700">${totalCount}</span>
+      </div>
+      <div style="display:flex;justify-content:space-between">
+        <span style="color:var(--muted)">إجمالي USDC المقفلة</span>
+        <span style="font-weight:700;color:var(--usdt)">${totalLocked.toFixed(4)} USDC</span>
+      </div>
+    </div>`;
+
+    document.getElementById('watchInfo').style.display = 'block';
+    document.getElementById('watchDetails').innerHTML = summary + (html || '<div style="text-align:center;color:var(--muted);padding:16px;font-size:.76rem">لا توجد قفلات</div>');
+
+  } catch(e) {
+    showAlert(alertEl, friendlyChainError(e), 'danger');
+  }
+}
+
+function goToTopupFromWatch(contractAddr, lockId) {
+  switchTab('topup', document.getElementById('t-topup'));
+  document.getElementById('topupContractAddr').value = contractAddr;
+  document.getElementById('topupLockId').value = lockId;
+  checkTopupLock();
+}
+
+function goToWithdrawFromWatch(contractAddr) {
+  switchTab('unlock', document.getElementById('t-unlock'));
+  document.getElementById('unlockContractAddr').value = contractAddr;
+  autoCheckUnlock();
+}
+
+let unlockWallet   = null;
+let unlockLockInfo = null;
+
+// يحوّل خطأ "could not decode result data / value=0x" (عادة بسبب اختيار شبكة خاطئة
+// لا يوجد بها هذا العقد) إلى رسالة عربية واضحة بدل رسالة ethers التقنية.
+function friendlyChainError(e) {
+  const msg = (e && (e.reason || e.message)) || String(e);
+  const isBadData = e && (e.code === 'BAD_DATA' || /could not decode result data/i.test(msg) || /value=\s*"0x"/i.test(msg));
+  // فشل الوصول إلى RPC نفسه (شائع على Safari/iOS برسالة "Load failed"، أو
+  // "Failed to fetch" على المتصفحات الأخرى) — غالباً بسبب اختيار شبكة خاطئة
+  // (RPC مختلف) أو انقطاع الاتصال بالإنترنت.
+  const isNetworkFail = e && (
+    e.code === 'NETWORK_ERROR' || e.code === 'SERVER_ERROR' || e.code === 'TIMEOUT' ||
+    /load failed/i.test(msg) || /failed to fetch/i.test(msg) || /network ?error/i.test(msg) ||
+    /fetch failed/i.test(msg)
+  );
+  if (isBadData || isNetworkFail) {
+    const netLbl = currentNet === 'main' ? 'الشبكة الرئيسية' : 'الشبكة التجريبية';
+    if (isBadData) {
+      return `❌ تعذّر قراءة بيانات القفل من هذا العنوان. على الأرجح عنوان التخزين هذا غير موجود على "${netLbl}" (الشبكة المختارة حالياً). تأكد من اختيار نفس الشبكة (الرئيسية أو التجريبية) التي أنشأت بها هذا القفل، ثم أعد المحاولة.`;
+    }
+    return `❌ تعذّر الاتصال بالشبكة لقراءة بيانات القفل. تأكد من الشبكة المختارة حالياً ("${netLbl}") — يجب أن تكون نفس الشبكة التي أنشأت بها هذا القفل — ثم تحقق من اتصالك بالإنترنت وأعد المحاولة.`;
+  }
+  return '❌ خطأ في القراءة: ' + msg;
+}
+
+// ── فحص تلقائي لتبويب السحب ──────────────────────────────────
+// يتم استدعاؤه تلقائياً بمجرد إدخال/لصق عنوان تخزين صالح (بدون أي حاجة
+// لمفتاح خاص) لعرض تفاصيل القفل الأساسية فوراً — قبل أن يُدخل المستخدم
+// المفتاح الخاص أو كلمات الاسترجاع. ثم يُعاد استدعاؤه تلقائياً بعد إدخال
+// المفتاح الخاص (يدوياً أو عبر كلمات الاسترجاع) للتحقق من كون المستخدم
+// هو المستفيد الفعلي وتفعيل زر السحب عند الاستحقاق، وكذلك عند تبديل الشبكة.
+let unlockContractTimer = null;
+let unlockPkTimer       = null;
+
+function onUnlockContractInput() {
+  clearTimeout(unlockContractTimer);
+  document.getElementById('withdrawBtn').disabled = true;
+  const val = document.getElementById('unlockContractAddr').value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(val)) {
+    unlockContractTimer = setTimeout(autoCheckUnlock, 700);
+  } else {
+    document.getElementById('unlockInfo').style.display = 'none';
+    clearAlert(document.getElementById('unlockAlert'));
+  }
+}
+
+function onUnlockPKInput() {
+  clearTimeout(unlockPkTimer);
+  unlockPkTimer = setTimeout(autoCheckUnlock, 500);
+}
+
+async function autoCheckUnlock() {
+  const alertEl = document.getElementById('unlockAlert');
+  clearAlert(alertEl);
+
+  const contractAddr = document.getElementById('unlockContractAddr').value.trim();
+  if (!contractAddr || !/^0x[0-9a-fA-F]{40}$/.test(contractAddr)) return;
+
+  const lockId = 0;
+
+  let pk = document.getElementById('unlockPK').value.trim();
+  if (pk.startsWith('0x')) pk = pk.slice(2);
+  const hasValidPk = /^[0-9a-fA-F]{64}$/.test(pk);
+
+  showAlert(alertEl, '🔍 جارٍ الفحص...', 'info');
+
+  try {
+    // ── المرحلة الأولى: قراءة بيانات القفل من البلوكشين مباشرة (بدون مفتاح) ──
+    const timeLock = new ethers.Contract(contractAddr, TIMELOCK_ABI, provider);
+    const [bene, amount, unlockTime, withdrawn] = await timeLock.getLock(BigInt(lockId));
+
+    if (!amount || amount === 0n) {
+      showAlert(alertEl, 'لم يتم العثور على هذا القفل.', 'danger');
+      document.getElementById('unlockInfo').style.display = 'none';
+      document.getElementById('withdrawBtn').disabled = true;
+      return;
+    }
+
+    const info = {
+      beneficiary: bene,
+      amount:      parseFloat(ethers.formatUnits(amount, NETS[currentNet].usdcDecimals)),
+      unlockTime:  Number(unlockTime),
+      withdrawn
+    };
+    unlockLockInfo = { ...info, lockId, contract: contractAddr };
+
+    const now       = Math.floor(Date.now() / 1000);
+    const remaining = info.unlockTime - now;
+    const unlocked  = remaining <= 0;
+
+    // ── المرحلة الثانية: إن وُجد مفتاح خاص صالح، تحقق من هوية المستفيد ورصيد POL ──
+    let isBene = null, polBal = null, walletErr = null;
+    if (hasValidPk) {
+      try {
+        const { wallet, address } = buildWallet(pk, currentNet);
+        unlockWallet = { address, wallet, pk };
+        isBene = address.toLowerCase() === info.beneficiary.toLowerCase();
+        polBal = await fetchMATICBal(address);
+      } catch (e) {
+        walletErr = e;
+        unlockWallet = null;
+      }
+    } else {
+      unlockWallet = null;
+    }
+
+    document.getElementById('unlockInfo').style.display = 'block';
+    document.getElementById('unlockDetails').innerHTML = `
+      <div class="info-row"><span class="info-label">Lock #</span><span class="info-value gold">${lockId}</span></div>
+      <div class="info-row"><span class="info-label">المبلغ</span><span class="info-value usdt">${info.amount.toFixed(4)} USDC</span></div>
+      <div class="info-row"><span class="info-label">يُفرج عند</span><span class="info-value gold">${new Date(info.unlockTime * 1000).toLocaleString('ar-MA')}</span></div>
+      <div class="info-row"><span class="info-label">المستفيد</span><span class="info-value ${isBene === false ? 'danger' : isBene === true ? 'usdt' : 'accent'}">${info.beneficiary.slice(0, 12)}...${info.beneficiary.slice(-6)} ${isBene === true ? '✅ أنت' : isBene === false ? '❌ ليس أنت' : ''}</span></div>
+      <div class="info-row" style="border:none"><span class="info-label">الحالة</span>
+        <span class="info-value">${info.withdrawn ? '✅ تم السحب' : unlocked ? '🔓 جاهز للسحب' : '🔒 مقفل'}</span>
+      </div>`;
+
+    if (!unlocked && !info.withdrawn) {
+      const cd = document.getElementById('unlockCountdown');
+      cd.style.display = 'flex';
+      startCountdown(remaining, cd);
+    } else {
+      document.getElementById('unlockCountdown').style.display = 'none';
+      if (cdInterval) clearInterval(cdInterval);
+    }
+
+    const canWithdraw = unlocked && isBene === true && !info.withdrawn;
+    document.getElementById('withdrawBtn').disabled = !canWithdraw;
+
+    if (walletErr) {
+      showAlert(alertEl, 'مفتاح خاص غير صالح: ' + walletErr.message, 'danger');
+    } else if (!hasValidPk) {
+      if (!info.withdrawn) {
+        showAlert(alertEl,
+          !unlocked
+            ? `⏳ يبقى ${formatDuration(remaining * 1000)} للإفراج — أدخل المفتاح الخاص للمستفيد (أو كلمات الاسترجاع) لتفعيل السحب عند الاستحقاق.`
+            : 'ℹ️ هذا القفل جاهز للسحب — أدخل المفتاح الخاص للمستفيد (أو كلمات الاسترجاع) لتفعيل زر السحب.',
+          'info');
+      } else {
+        clearAlert(alertEl);
+      }
+    } else if (!canWithdraw && !info.withdrawn) {
+      showAlert(alertEl,
+        !unlocked        ? `⏳ يبقى ${formatDuration(remaining * 1000)} للإفراج` :
+        isBene === false ? '❌ أنت لست المستفيد من هذا القفل' : '',
+        'warn');
+    } else if (canWithdraw && polBal === 0) {
+      showAlert(alertEl,
+        '⚠️ رصيد POL صفر — أضف كمية بسيطة من POL لعنوانك لدفع رسوم السحب.',
+        'warn');
+    } else {
+      clearAlert(alertEl);
+    }
+  } catch(e) {
+    showAlert(alertEl, friendlyChainError(e), 'danger');
+  }
+}
+
+async function doWithdraw() {
+  if (!unlockWallet || !unlockLockInfo) return;
+  const alertEl = document.getElementById('unlockAlert');
+  const btn = document.getElementById('withdrawBtn');
+  const txt = document.getElementById('withdrawBtnTxt');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner spinner-dark"></span> جارٍ السحب...';
+
+  try {
+    // فحص رصيد POL قبل المحاولة
+    const polBal = await fetchMATICBal(unlockWallet.address);
+    if (polBal === 0) {
+      showAlert(alertEl,
+        '⚠️ رصيد POL صفر — أضف كمية بسيطة من POL لعنوان المستفيد لدفع رسوم السحب.',
+        'warn');
+      btn.disabled = false;
+      return;
+    }
+
+    const { wallet } = buildWallet(unlockWallet.pk, currentNet);
+    const timeLock = new ethers.Contract(unlockLockInfo.contract, TIMELOCK_ABI, wallet);
+
+    const tx = await timeLock.withdraw(BigInt(unlockLockInfo.lockId), await getGasOverrides());
+    showAlert(alertEl, '⏳ في انتظار التأكيد...', 'info');
+    await tx.wait(1);
+
+    const explorer = NETS[currentNet].explorer + tx.hash;
+    showAlert(alertEl,
+      `✅ تم السحب بنجاح! <a href="${explorer}" target="_blank" style="color:var(--accent2)">عرض TX ↗</a>`,
+      'success');
+    btn.disabled = true;
+  } catch(e) {
+    const msg = e.reason || e.message || String(e);
+    const isNoFunds = /insufficient funds|INSUFFICIENT_FUNDS/i.test(msg);
+    showAlert(alertEl,
+      isNoFunds
+        ? '⚠️ رصيد POL غير كافٍ — أضف POL لعنوان المستفيد لدفع رسوم السحب.'
+        : '❌ ' + (e.reason || (e.message || '').slice(0, 120) || String(e)),
+      isNoFunds ? 'warn' : 'danger');
+    btn.disabled = false;
+  } finally {
+    txt.innerHTML = '<img src="withdraw.png" alt="" style="width:22px;height:22px;vertical-align:middle;margin-left:6px"> <span style="font-size:1rem;font-weight:700">سحب</span>';
+  }
+}
+
+// ─────────────────────────────────────────────
+//  MY LOCKS — من البلوكشين مباشرةً (عبر lockCount + getLock)
+// ─────────────────────────────────────────────
+
+// ─────────────────────────────────────────────
+//  COUNTDOWN — بطاقات Flip حقيقية (تنقلب فعليًا عند تغيّر الرقم)
+// ─────────────────────────────────────────────
+function makeFlipDigit(ch) {
+  const el = document.createElement('div');
+  el.className = 'flip-digit';
+  el.dataset.value = ch;
+  el.innerHTML =
+    '<div class="fd-half fd-top" data-char="' + ch + '"></div>' +
+    '<div class="fd-half fd-bottom" data-char="' + ch + '"></div>' +
+    '<div class="fd-flap fd-flap-top" data-char="' + ch + '"></div>' +
+    '<div class="fd-flap fd-flap-bottom" data-char="' + ch + '"></div>';
+  return el;
+}
+
+function setFlipDigit(el, newCh) {
+  if (el.dataset.value === newCh) return;
+  const oldCh = el.dataset.value;
+  el.dataset.value = newCh;
+  const top = el.querySelector('.fd-top');
+  const bottom = el.querySelector('.fd-bottom');
+  const flapTop = el.querySelector('.fd-flap-top');
+  const flapBottom = el.querySelector('.fd-flap-bottom');
+
+  // النصف العلوي الثابت يتحدّث فورًا للقيمة الجديدة (مخفي خلف الرفرف حتى ينطوي)
+  top.dataset.char = newCh;
+  flapTop.dataset.char = oldCh;
+  flapTop.style.animation = 'none';
+  flapTop.style.transform = 'rotateX(0deg)';
+  void flapTop.offsetWidth;
+  flapTop.style.animation = 'fdFoldTop .32s ease-in forwards';
+
+  // الرفرف السفلي ينطوي للأسفل بعد منتصف الحركة كاشفًا القيمة الجديدة
+  flapBottom.dataset.char = newCh;
+  flapBottom.style.animation = 'none';
+  flapBottom.style.transform = 'rotateX(90deg)';
+  void flapBottom.offsetWidth;
+  setTimeout(() => {
+    // إن تغيّرت القيمة مجددًا قبل اكتمال هذه الحركة، لا نكتب قيمة قديمة فوق الجديدة
+    if (el.dataset.value !== newCh) return;
+    flapBottom.style.animation = 'fdUnfoldBottom .32s ease-out forwards';
+    bottom.dataset.char = newCh;
+  }, 300);
+}
+
+function renderFlipGroup(groupEl, str) {
+  let digits = groupEl.querySelectorAll('.flip-digit');
+  if (digits.length !== str.length) {
+    groupEl.innerHTML = '';
+    for (const ch of str) groupEl.appendChild(makeFlipDigit(ch));
+    digits = groupEl.querySelectorAll('.flip-digit');
+  }
+  digits.forEach((el, i) => setFlipDigit(el, str[i]));
+}
+
+// ─────────────────────────────────────────────
+//  مربعات زرقاء ثابتة بدون رسوم Flip — تُستخدم لعرض المبلغ
+// ─────────────────────────────────────────────
+function staticDigitBoxes(str) {
+  return [...str].map(ch =>
+    ch === '.' ? `<div class="amt-dot">.</div>` : `<div class="amt-digit">${ch}</div>`
+  ).join('');
+}
+
+// ─────────────────────────────────────────────
+//  عرض ثابت (بدون عد تنازلي) لتاريخ ووقت الإفراج — بنفس تصميم بطاقات Flip
+// ─────────────────────────────────────────────
+function renderReleaseDateCard(container, ts) {
+  const dt = new Date(ts * 1000);
+  container.classList.add('has-date');
+  container.innerHTML = `
+    <div class="cd-date-row">
+      <div class="cd-unit"><div class="cd-group" data-unit="dy"></div></div>
+      <div class="cd-sep">/</div>
+      <div class="cd-unit"><div class="cd-group" data-unit="mo"></div></div>
+      <div class="cd-sep">/</div>
+      <div class="cd-unit"><div class="cd-group" data-unit="yr"></div></div>
+    </div>
+    <div class="cd-time-row">
+      <div class="cd-unit"><div class="cd-group" data-unit="hh"></div></div>
+      <div class="cd-sep">:</div>
+      <div class="cd-unit"><div class="cd-group" data-unit="mm"></div></div>
+    </div>`;
+  renderFlipGroup(container.querySelector('[data-unit="dy"]'), String(dt.getDate()).padStart(2, '0'));
+  renderFlipGroup(container.querySelector('[data-unit="mo"]'), String(dt.getMonth() + 1).padStart(2, '0'));
+  renderFlipGroup(container.querySelector('[data-unit="yr"]'), String(dt.getFullYear()));
+  renderFlipGroup(container.querySelector('[data-unit="hh"]'), String(dt.getHours()).padStart(2, '0'));
+  renderFlipGroup(container.querySelector('[data-unit="mm"]'), String(dt.getMinutes()).padStart(2, '0'));
+}
+
+function startCountdown(initialSecs, container, opts = {}) {
+  const showSeconds = opts.showSeconds !== false;
+  const showDays    = opts.showDays !== false;
+  const targetTs    = opts.targetTs || null; // بالثواني (unix) — لعرض سنة/شهر/يوم الإفراج كصف ثابت أعلى العدّاد
+
+  if (cdInterval) clearInterval(cdInterval);
+  let secs = initialSecs;
+  let built = false;
+  const render = () => {
+    if (secs <= 0) { clearInterval(cdInterval); container.style.display = 'none'; return; }
+    const d = Math.floor(secs / 86400);
+    const h = Math.floor((secs % 86400) / 3600);
+    const m = Math.floor((secs % 3600) / 60);
+    const s = secs % 60;
+    if (!built) {
+      const timeUnitsHtml = `
+        ${showDays && d ? `<div class="cd-unit"><div class="cd-group" data-unit="d"></div><div class="cd-lbl">يوم</div></div><div class="cd-sep">:</div>` : ''}
+        <div class="cd-unit"><div class="cd-group" data-unit="h"></div><div class="cd-lbl">ساعة</div></div>
+        <div class="cd-sep">:</div>
+        <div class="cd-unit"><div class="cd-group" data-unit="m"></div><div class="cd-lbl">دقيقة</div></div>
+        ${showSeconds ? `<div class="cd-sep">:</div><div class="cd-unit"><div class="cd-group" data-unit="s"></div><div class="cd-lbl">ثانية</div></div>` : ''}`;
+
+      if (targetTs) {
+        container.classList.add('has-date');
+        container.innerHTML = `
+          <div class="cd-date-row">
+            <div class="cd-unit"><div class="cd-group" data-unit="yr"></div><div class="cd-lbl">سنة</div></div>
+            <div class="cd-sep">/</div>
+            <div class="cd-unit"><div class="cd-group" data-unit="mo"></div><div class="cd-lbl">شهر</div></div>
+            <div class="cd-sep">/</div>
+            <div class="cd-unit"><div class="cd-group" data-unit="dy"></div><div class="cd-lbl">يوم</div></div>
+          </div>
+          <div class="cd-time-row">${timeUnitsHtml}</div>`;
+        const dt = new Date(targetTs * 1000);
+        renderFlipGroup(container.querySelector('[data-unit="yr"]'), String(dt.getFullYear()));
+        renderFlipGroup(container.querySelector('[data-unit="mo"]'), String(dt.getMonth() + 1).padStart(2, '0'));
+        renderFlipGroup(container.querySelector('[data-unit="dy"]'), String(dt.getDate()).padStart(2, '0'));
+      } else {
+        container.classList.remove('has-date');
+        container.innerHTML = timeUnitsHtml;
+      }
+      built = true;
+    }
+    if (showDays && d) {
+      const g = container.querySelector('[data-unit="d"]');
+      if (g) renderFlipGroup(g, String(d).padStart(2, '0'));
+    }
+    renderFlipGroup(container.querySelector('[data-unit="h"]'), String(h).padStart(2, '0'));
+    renderFlipGroup(container.querySelector('[data-unit="m"]'), String(m).padStart(2, '0'));
+    if (showSeconds) renderFlipGroup(container.querySelector('[data-unit="s"]'), String(s).padStart(2, '0'));
+    secs--;
+  };
+  render();
+  cdInterval = setInterval(render, 1000);
+}
+
+// ─────────────────────────────────────────────
+//  UTILS
+// ─────────────────────────────────────────────
+function formatDuration(ms) {
+  if (ms <= 0) return 'منتهي';
+  const s = Math.floor(ms / 1000);
+  const d = Math.floor(s / 86400);
+  const h = Math.floor((s % 86400) / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  if (d > 0) return `${d} يوم ${h} ساعة`;
+  if (h > 0) return `${h} ساعة ${m} دقيقة`;
+  return `${m} دقيقة`;
+}
+
+function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+
+function switchTab(name, btn) {
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  btn.classList.add('active');
+}
+
+function showAlert(el, msg, type) {
+  el.className = `alert alert-${type} show`;
+  el.innerHTML = msg;
+}
+function clearAlert(el) { el.className = 'alert'; el.innerHTML = ''; }
+
+function toast(msg, type, dur = 2500) {
+  const t = document.createElement('div');
+  t.className = `alert alert-${type} show`;
+  t.style.cssText = 'position:fixed;bottom:16px;left:50%;transform:translateX(-50%);z-index:9999;min-width:200px;text-align:center;white-space:nowrap';
+  t.innerHTML = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), dur);
+}
+
+async function copyEl(id) {
+  const t = document.getElementById(id)?.textContent || '';
+  try { await navigator.clipboard.writeText(t); toast('✅ تم النسخ', 'success'); }
+  catch { toast('فشل النسخ', 'danger'); }
+}
+
+// ─────────────────────────────────────────────
+//  TOP-UP (إيداع تراكمي)
+// ─────────────────────────────────────────────
+let topupWallet    = null;
+let topupLockData  = null; // { lockId, contract, amount, unlockTime, beneficiary }
+
+async function onTopupPKInput() {
+  const raw = document.getElementById('topupPK').value.trim();
+  let pk = raw.startsWith('0x') ? raw.slice(2) : raw;
+  if (!/^[0-9a-fA-F]{64}$/.test(pk)) {
+    document.getElementById('topupPKInfo').style.display = 'none';
+    document.getElementById('topupMATIC').textContent = '0.0000';
+    document.getElementById('topupUSDC').textContent  = '0.0000';
+    document.getElementById('topupPolAlert').style.display = 'none';
+    topupWallet = null; return;
+  }
+  try {
+    const { wallet, address, provider: p } = buildWallet(pk, currentNet);
+    topupWallet = { wallet, address, pk: '0x' + pk };
+    document.getElementById('topupAddr').textContent = address;
+    document.getElementById('topupPKInfo').style.display = 'block';
+    document.getElementById('topupMATIC').textContent = '...';
+    document.getElementById('topupUSDC').textContent  = '...';
+    document.getElementById('topupPolAlert').style.display = 'none';
+    const [m, u] = await Promise.all([fetchMATICBal(address), fetchUSDCBal(address)]);
+    document.getElementById('topupMATIC').textContent = m.toFixed(4) + ' POL';
+    document.getElementById('topupUSDC').textContent  = u.toFixed(4) + ' USDC';
+    document.getElementById('topupPolAlert').style.display = m === 0 ? 'block' : 'none';
+  } catch(e) { console.warn(e); }
+}
+
+// auto-trigger عند إدخال/لصق عنوان تخزين صالح في تبويب زيادة الرصيد
+let topupContractTimer = null;
+function onTopupContractInput() {
+  clearTimeout(topupContractTimer);
+  const val = document.getElementById('topupContractAddr').value.trim();
+  if (/^0x[0-9a-fA-F]{40}$/.test(val)) {
+    topupContractTimer = setTimeout(checkTopupLock, 700);
+  } else {
+    document.getElementById('topupLockInfo').style.display    = 'none';
+    document.getElementById('topupDepositCard').style.display = 'none';
+    clearAlert(document.getElementById('topupCheckAlert'));
+  }
+}
+
+async function checkTopupLock() {
+  const alertEl = document.getElementById('topupCheckAlert');
+  clearAlert(alertEl);
+  document.getElementById('topupLockInfo').style.display    = 'none';
+  document.getElementById('topupDepositCard').style.display = 'none';
+
+  const lockId = 0;
+
+  const contractAddr = document.getElementById('topupContractAddr').value.trim();
+  if (!contractAddr || !/^0x[0-9a-fA-F]{40}$/.test(contractAddr)) { showAlert(alertEl, 'أدخل عنوان التخزين الصحيح (0x...).', 'danger'); return; }
+
+  showAlert(alertEl, '🔍 جارٍ الفحص...', 'info');
+  try {
+    const timeLock = new ethers.Contract(contractAddr, TIMELOCK_ABI, provider);
+    const [bene, amount, unlockTime, withdrawn] = await timeLock.getLock(BigInt(lockId));
+    if (!amount || amount === 0n) { showAlert(alertEl, 'لم يتم العثور على هذا القفل.', 'danger'); return; }
+
+    const now      = Math.floor(Date.now() / 1000);
+    const unlocked = Number(unlockTime) <= now;
+
+    if (withdrawn)  { showAlert(alertEl, '❌ تم سحب هذا القفل بالفعل، لا يمكن الإيداع عليه.', 'danger'); return; }
+    if (unlocked)   { showAlert(alertEl, '❌ انتهت مدة هذا القفل، لا يمكن الإيداع عليه.', 'danger'); return; }
+
+    topupLockData = {
+      lockId,
+      contract: contractAddr,
+      amount:   parseFloat(ethers.formatUnits(amount, NETS[currentNet].usdcDecimals)),
+      unlockTime: Number(unlockTime),
+      beneficiary: bene
+    };
+
+    clearAlert(alertEl);
+    document.getElementById('tuLockId').textContent = '#' + lockId;
+    document.getElementById('tuAmt').textContent    = topupLockData.amount.toFixed(6) + ' USDC';
+    document.getElementById('tuDate').textContent   = new Date(topupLockData.unlockTime * 1000).toLocaleString('ar-MA', {dateStyle:'short', timeStyle:'short'});
+    document.getElementById('tuBene').textContent   = bene.slice(0, 12) + '...' + bene.slice(-6);
+    document.getElementById('tuStatus').innerHTML   = '<span class="lock-badge lb-locked">🔒 مقفل — يبقى ' + formatDuration((topupLockData.unlockTime - now) * 1000) + '</span>';
+    document.getElementById('topupLockInfo').style.display    = 'block';
+    document.getElementById('topupDepositCard').style.display = 'block';
+
+    // تحقق دعم topUp في العقد المنشور
+    contractSupportsTopUp(contractAddr).then(ok => {
+      if (!ok) {
+        showAlert(document.getElementById('topupAlert'),
+          '⚠️ عنوان التخزين المستخدم قديم ولا يدعم topUp. انتقل إلى تبويب 🔒 قفل جديد لإنشاء عنوان تخزين محدَّث.',
+          'danger');
+        document.getElementById('topupApproveBtn').disabled = true;
+      }
+    });
+
+    // إعادة تعيين أزرار الإيداع
+    document.getElementById('topupExecBtn').disabled = true;
+    document.getElementById('topupAmt').value = '';
+    document.getElementById('topupPreview').style.display = 'none';
+    clearAlert(document.getElementById('topupAlert'));
+  } catch(e) {
+    showAlert(alertEl, '❌ خطأ: ' + (e.reason || e.message), 'danger');
+  }
+}
+
+function updateTopupPreview() {
+  if (!topupLockData) return;
+  const add = parseFloat(document.getElementById('topupAmt').value);
+  if (!add || add <= 0) { document.getElementById('topupPreview').style.display = 'none'; return; }
+  const newTotal = topupLockData.amount + add;
+  document.getElementById('topupPreview').style.display = 'block';
+  document.getElementById('tuPrevAdd').textContent   = '+' + add.toFixed(6) + ' USDC';
+  document.getElementById('tuPrevTotal').textContent = newTotal.toFixed(6) + ' USDC';
+}
+
+async function doTopupApprove() {
+  const alertEl = document.getElementById('topupAlert');
+  clearAlert(alertEl);
+  if (!topupWallet) { showAlert(alertEl, 'أدخل المفتاح الخاص أولاً.', 'danger'); return; }
+  const add = parseFloat(document.getElementById('topupAmt').value);
+  if (!add || add <= 0) { showAlert(alertEl, 'أدخل كمية USDC للإضافة.', 'danger'); return; }
+
+  // تحقق أن العقد يدعم topUp (selector: de643a71)
+  const supported = await contractSupportsTopUp(topupLockData.contract);
+  if (!supported) {
+    showAlert(alertEl,
+      '⚠️ عنوان التخزين المستخدم قديم ولا يدعم دالة topUp. انتقل إلى تبويب 🔒 قفل جديد لإنشاء عنوان تخزين محدَّث، ثم أنشئ قفلاً جديداً.',
+      'danger');
+    return;
+  }
+
+  const btn = document.getElementById('topupApproveBtn');
+  const txt = document.getElementById('topupApproveTxt');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner"></span> Approve...';
+
+  try {
+    const units = ethers.parseUnits(add.toString(), NETS[currentNet].usdcDecimals);
+    const usdcC = new ethers.Contract(NETS[currentNet].usdc, ERC20_ABI, topupWallet.wallet);
+    showAlert(alertEl, '⏳ إرسال Approve...', 'info');
+    const gas = await getGasOverrides();
+    const tx  = await usdcC.approve(topupLockData.contract, units, gas);
+    showAlert(alertEl, '⏳ انتظار التأكيد... ' + tx.hash.slice(0, 14) + '...', 'info');
+    await tx.wait(1);
+    showAlert(alertEl, '✅ Approve ناجح! الآن اضغط ② إيداع', 'success');
+    document.getElementById('topupExecBtn').disabled = false;
+  } catch(e) {
+    showAlert(alertEl, '❌ ' + (e.reason || e.message || String(e)), 'danger');
+  } finally {
+    btn.disabled = false;
+    txt.innerHTML = '① Approve';
+  }
+}
+
+async function doTopupExec() {
+  const alertEl = document.getElementById('topupAlert');
+  const add = parseFloat(document.getElementById('topupAmt').value);
+  if (!add || add <= 0 || !topupWallet || !topupLockData) return;
+
+  const btn = document.getElementById('topupExecBtn');
+  const txt = document.getElementById('topupExecTxt');
+  btn.disabled = true;
+  txt.innerHTML = '<span class="spinner spinner-dark"></span> جارٍ الإيداع...';
+
+  try {
+    const units    = ethers.parseUnits(add.toString(), NETS[currentNet].usdcDecimals);
+    const timeLock = new ethers.Contract(topupLockData.contract, TIMELOCK_ABI, topupWallet.wallet);
+    showAlert(alertEl, '⏳ إرسال معاملة الإيداع...', 'info');
+    const gas = await getGasOverrides();
+
+    // استدعاء دالة topUp في العقد
+    const tx = await timeLock.topUp(BigInt(topupLockData.lockId), units, gas);
+    showAlert(alertEl, '⏳ انتظار التأكيد...', 'info');
+    const receipt = await tx.wait(1);
+
+    // تحديث الرصيد محلياً (للعرض الفوري، الحقيقي يُقرأ من البلوكشين)
+    topupLockData.amount += add;
+    document.getElementById('tuAmt').textContent = topupLockData.amount.toFixed(6) + ' USDC';
+
+    const explorer = NETS[currentNet].explorer + tx.hash;
+    showAlert(alertEl,
+      `✅ تم الإيداع! +${add.toFixed(4)} USDC → الرصيد الجديد: ${topupLockData.amount.toFixed(4)} USDC<br>
+      <a href="${explorer}" target="_blank" style="color:var(--accent2)">عرض TX ↗</a>`,
+      'success');
+
+    // تحديث عرض الأرصدة
+    const [, u] = await Promise.all([fetchMATICBal(topupWallet.address), fetchUSDCBal(topupWallet.address)]);
+    document.getElementById('topupUSDC').textContent = u.toFixed(4) + ' USDC';
+    document.getElementById('topupAmt').value = '';
+    document.getElementById('topupPreview').style.display = 'none';
+    btn.disabled = true;
+    document.getElementById('topupExecBtn').disabled = true;
+    toast('✅ إيداع ناجح!', 'success');
+  } catch(e) {
+    showAlert(alertEl, '❌ ' + (e.reason || e.message || String(e)), 'danger');
+    btn.disabled = false;
+  } finally {
+    txt.innerHTML = '② إيداع ➕';
+  }
+}
+
+function goToTopup(lockId) {
+  switchTab('topup', document.getElementById('t-topup'));
+  document.getElementById('topupLockId').value = lockId;
+  setTimeout(() => checkTopupLock(), 400);
+}
+
+function toggleEye(id, btn) {
+  const inp = document.getElementById(id);
+  if (inp.type === 'password') { inp.type = 'text';     btn.textContent = '🙈'; }
+  else                         { inp.type = 'password'; btn.textContent = '👁'; }
+}
+
+// ─── أزرار اللصق والنسخ للحقول الحساسة ───
+async function pasteToField(id) {
+  const inp = document.getElementById(id);
+  try {
+    const text = await navigator.clipboard.readText();
+    if (!text) { toast('الحافظة فارغة', 'warn'); return; }
+    inp.value = text.trim();
+    inp.dispatchEvent(new Event('input', { bubbles: true }));
+    toast('✅ تم اللصق', 'success');
+  } catch (e) {
+    toast('❌ تعذّر الوصول للحافظة، جرّب اللصق يدوياً (اضغط مطولاً على الحقل)', 'danger', 3500);
+  }
+}
+
+async function copyFromField(id) {
+  const inp = document.getElementById(id);
+  if (!inp.value) { toast('الحقل فارغ', 'warn'); return; }
+  try {
+    await navigator.clipboard.writeText(inp.value);
+    toast('✅ تم النسخ', 'success');
+  } catch {
+    toast('❌ فشل النسخ', 'danger');
+  }
+}if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(console.error);
+  });
+}
+</script>
+</body>
+</html>
