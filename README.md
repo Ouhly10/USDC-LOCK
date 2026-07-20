@@ -1,4 +1,4 @@
-# 🔒 USDC Savings Tool — Polygon Time-Lock
+# USDC Savings Tool — Polygon Time-Lock
 
 **A secure, trustless USDC time-lock on the Polygon network — no one can withdraw before the set date, not even you.**
 
@@ -8,15 +8,15 @@ A single-file HTML web app that lets you lock any amount of USDC inside a smart 
 
 ## ✨ Why this tool?
 
-- 💪 **Real financial discipline** — once locked, your funds can't move before the deadline. No "just this once" withdrawals.
+-  **Real financial discipline** — once locked, your funds can't move before the deadline. No "just this once" withdrawals.
 - 🔗 **No middleman, no third party** — the smart contract is the only judge; no team or company controls your funds.
 - 🌐 **Works anywhere** — a single HTML file that opens in any browser, no install, no account.
-- 🌗 **Clean, responsive UI** — light and dark mode support.
-- 🧾 **Full transparency** — every transaction is on-chain and verifiable on Polygonscan.
+-  **Clean, responsive UI** — light and dark mode support.
+-  **Full transparency** — every transaction is on-chain and verifiable on Polygonscan.
 
 ---
 
-## ⚙️ How it works
+##  How it works
 
 1. **Create a lock**
    Set the **amount**, the **beneficiary** (yourself or another address), and the **release date & time**. The app deploys a dedicated lock contract on Polygon.
@@ -35,7 +35,7 @@ A single-file HTML web app that lets you lock any amount of USDC inside a smart 
 
 ---
 
-## 🧠 The Smart Contract
+## *** The Smart Contract ***
 
 | Field | Value |
 |---|---|
@@ -56,12 +56,12 @@ A single-file HTML web app that lets you lock any amount of USDC inside a smart 
 |---|---|
 | View amount, beneficiary, and countdown to withdrawal | Set the lock amount and release date |
 
-<img width="1000" height="2000" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" />
+<img width="600" height="1100" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" />
 
 
 ---
 
-## 🛡️ Important Security Notes
+## ****** Important Security Notes  ******
 
 - ⚠️ **The storage address is a smart contract, not a regular wallet.** Never send USDC to it as a plain transfer from a wallet or exchange — any balance sent that way **cannot be recovered**. Always use the "Top Up" tab inside the app itself.
 - 🔑 **Save the contract address** as soon as you create a lock. If you lose it, search your wallet's transaction history for the address that created it, under `contract`, `lock`, or `call`.
@@ -87,6 +87,6 @@ A single-file HTML web app that lets you lock any amount of USDC inside a smart 
 
 ---
 
-## 📜 Disclaimer
+## Disclaimer
 
 This tool interacts directly with a smart contract on a public network (Polygon). No party can reverse a transaction or recover funds sent by mistake. Use it at your own risk, and always start with small amounts on the testnet before using mainnet.
