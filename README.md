@@ -56,7 +56,7 @@ A single-file HTML web app that lets you lock any amount of USDC inside a smart 
 |---|---|
 | View amount, beneficiary, and countdown to withdrawal | Set the lock amount and release date |
 
-<img width="150" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" ><img width="150" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" ><img width="150" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" ><img width="150" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" />
+<img width="170" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" ><img width="170" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" ><img width="170" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" ><img width="170" height="320" alt="image" src="https://github.com/user-attachments/assets/ad0b6fd2-7092-447d-b3b7-8aaf74b3c975" />
 
 
 ---
