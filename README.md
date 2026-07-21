@@ -56,8 +56,7 @@ A single-file HTML web app that lets you lock any amount of USDC inside a smart 
 |---|---|
 | View amount, beneficiary, and countdown to withdrawal | Set the lock amount and release date |
 
-<img width="85" height="180" alt="image" src="https://github.com/user-attachments/assets/5adc4e1c-31af-4469-b972-4313907f6a98" />
-
+<img width="85" height="180" alt="image" src="https://github.com/user-attachments/assets/5adc4e1c-31af-4469-b972-4313907f6a98" ><img width="85" height="180" alt="image" src="https://github.com/user-attachments/assets/a8526911-d38c-45bc-8690-c2c21895b2e1" ><img width="85" height="180" alt="image" src="https://github.com/user-attachments/assets/4e6d6721-2d53-451d-95d6-f31cbe8c591b" ><img width="85" height="180" alt="image" src="https://github.com/user-attachments/assets/4d64eef2-cd02-48ca-8860-8c4d9935110b" ><img width="85" height="180" alt="image" src="https://github.com/user-attachments/assets/4232b71c-4662-4197-a7de-94990fad6db0" />
 
 
 ---
