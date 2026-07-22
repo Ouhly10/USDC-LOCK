@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://usdtimelock.com/sitemap.xml
