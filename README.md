@@ -74,7 +74,11 @@ This avoids the reliability issues of generic remote wallet connectors, particul
 3. Connect a wallet: MetaMask, Trust Wallet, or Coinbase Wallet.
 4. From the New Lock tab, create a small test lock to get comfortable with the flow before committing meaningful amounts.
 5. Track it from the Monitor tab until release, then withdraw.
-
+## Tip me * ##.   
+USDC Storage address: 0xA0241d826A466F6FcEDcaF5610c914aA8c334E0b , 
+USDT Storage address: 0x704f31256aBdE50cbc7923310A7B9CF9586f9E82 ,
+                                * not regular addresses
+                     
 ## Disclaimer
 
 This tool interacts directly with smart contracts on a public blockchain. No transaction can be reversed, and no party — including the developer of this tool — can recover funds sent in error. Use it at your own risk, verify contract addresses independently, and start with small amounts on the testnet before using real funds on mainnet.
