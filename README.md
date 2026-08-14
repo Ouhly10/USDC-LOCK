@@ -42,7 +42,6 @@ Self-custody is supposed to mean nobody else controls your money — but it also
 | Events | `Locked`, `Withdrawn`, `ToppedUp` |
 | Gas token | POL |
 
-Every lock deploys its own contract address. Save it — it is the only way to look up or later withdraw from that specific lock, alongside the Monitor tab's tracking.
 
 ## Wallet connections
 
@@ -56,7 +55,7 @@ This avoids the reliability issues of generic remote wallet connectors, particul
 ## Security notes
 
 - The storage address created for a lock is a **smart contract, not a personal wallet**. Never send USDC or USDT to it as a plain transfer from an exchange or another wallet — funds sent that way cannot be recovered. Always add balance through the Top Up tab inside the app.
-- Save the contract address the moment a lock is created. If it's lost, it can still be found by searching the creating wallet's transaction history for the contract-creation transaction.
+
 - The address funding or withdrawing a lock needs a small amount of POL to cover Polygon network fees.
 - For an extra layer of separation, consider creating a lock from a dedicated wallet with a different beneficiary address than your daily-use wallet.
 
