@@ -64,7 +64,7 @@ This avoids the reliability issues of generic remote wallet connectors, particul
 - **HTML, CSS, and vanilla JavaScript** — a single-page application, no build step, no framework, no bundler.
 - **ethers.js v6** — all contract deployment, reads, and transactions.
 - **Polygon Mainnet and Amoy Testnet**, accessed through multiple public RPC endpoints with automatic fallback for reliability.
-- **GitHub Pages**, served at [usdtimelock.com](https://usdtimelock.com).
+- **GitHub Pages**, served at (https://usdtimelock.com).
 
 ## Getting started
 
@@ -74,9 +74,9 @@ This avoids the reliability issues of generic remote wallet connectors, particul
 4. From the New Lock tab, create a small test lock to get comfortable with the flow before committing meaningful amounts.
 5. Track it from the Monitor tab until release, then withdraw.
 ## Donate *    
-USDC Storage address: 0xA0241d826A466F6FcEDcaF5610c914aA8c334E0b ,
-USDT Storage address: 0x704f31256aBdE50cbc7923310A7B9CF9586f9E82 ,
-          *Contract addresses, don’t send normal transaction. 🙏🏻
+USDC beneficiary address: 0x72Ac79a5C3b02E7f1326114226Ac46a57ACdf1cf ,
+USDT beneficiary address: 0x85Cde19570cD89bfd657f70fEA0c5727a7b30A37 ,
+
 
 ## Disclaimer
 
