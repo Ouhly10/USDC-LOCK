@@ -418,6 +418,11 @@ label{display:block;font-size:.74rem;font-weight:600;color:var(--muted2);margin-
 .wr-tip-col .wr-icon-btn img{width:22px;height:22px}
 :root[data-theme="dark"] .wr-icon-btn{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.1);box-shadow:0 3px 10px rgba(0,0,0,.2),inset 0 1px 1px rgba(255,255,255,.07)}
 .wr-tip-col{position:relative;display:flex;align-items:center;flex-shrink:0}
+.watch-input-wrap{position:relative;flex:1;min-width:0;display:flex;align-items:center}
+.watch-input-wrap input{position:relative;z-index:1;width:100%;padding-left:42px}
+.watch-input-wrap .wr-icon-btn{position:absolute;z-index:2;left:4px;top:50%;transform:translateY(-50%);width:30px;height:30px}
+.watch-input-wrap .wr-icon-btn:active{transform:translateY(-50%) scale(.92)}
+.watch-input-wrap .wr-icon-btn img{width:16px;height:16px}
 .wr-tip-label{position:absolute;top:-24px;left:50%;transform:translateX(-50%);font-size:.74rem;font-weight:600;color:var(--muted2);white-space:nowrap}
 input,select,textarea{width:100%;background:rgba(118,118,128,.10);border:1px solid rgba(255,255,255,.25);border-radius:999px;padding:10px 16px;color:var(--text);font-family:inherit;font-size:.9rem;outline:none;transition:border-color .2s,background .2s,box-shadow .2s;direction:ltr;text-align:left;-webkit-backdrop-filter:blur(10px) saturate(150%);backdrop-filter:blur(10px) saturate(150%);box-shadow:inset 0 1px 1px rgba(255,255,255,.3)}
 textarea{border-radius:22px}
@@ -638,8 +643,8 @@ textarea{resize:none;height:70px;font-size:.78rem}
   background:rgba(255,255,255,.4);
   -webkit-backdrop-filter:blur(16px) saturate(150%);backdrop-filter:blur(16px) saturate(150%);
   border:1px solid rgba(255,255,255,.35);
-  color:var(--accent2);font-weight:700;font-size:clamp(.64rem,3.9vw,.84rem);line-height:1.4;
-  letter-spacing:0;direction:ltr;text-align:center;white-space:nowrap;overflow:visible;
+  color:var(--accent2);font-weight:700;font-size:.84rem;line-height:1.4;
+  letter-spacing:0;direction:ltr;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
   font-family:inherit;
   box-shadow:0 3px 12px rgba(0,0,0,.05),inset 0 1px 1px rgba(255,255,255,.45);
   box-sizing:border-box;
@@ -648,6 +653,20 @@ textarea{resize:none;height:70px;font-size:.78rem}
   background:rgba(255,255,255,.07);border-color:rgba(255,255,255,.09);
   box-shadow:0 3px 12px rgba(0,0,0,.2),inset 0 1px 1px rgba(255,255,255,.06);
 }
+.addr-glass-box{
+  border-radius:14px;padding:12px 14px;margin-top:6px;
+  -webkit-backdrop-filter:blur(16px) saturate(160%);backdrop-filter:blur(16px) saturate(160%);
+  border:1px solid rgba(255,255,255,.35);
+  box-shadow:0 3px 12px rgba(0,0,0,.06),inset 0 1px 1px rgba(255,255,255,.5);
+}
+.addr-glass-box.green{background:linear-gradient(135deg,rgba(123,217,154,.35) 0%,rgba(76,175,109,.14) 100%)}
+.addr-glass-box.blue{background:linear-gradient(135deg,rgba(125,184,242,.35) 0%,rgba(63,127,214,.14) 100%)}
+:root[data-theme="dark"] .addr-glass-box{
+  border-color:rgba(255,255,255,.09);
+  box-shadow:0 3px 12px rgba(0,0,0,.25),inset 0 1px 1px rgba(255,255,255,.07);
+}
+:root[data-theme="dark"] .addr-glass-box.green{background:linear-gradient(135deg,rgba(76,175,109,.28) 0%,rgba(76,175,109,.08) 100%)}
+:root[data-theme="dark"] .addr-glass-box.blue{background:linear-gradient(135deg,rgba(63,127,214,.28) 0%,rgba(63,127,214,.08) 100%)}
 .pill-blue{
   border-radius:999px;
   background:linear-gradient(180deg,#7db8f2 0%,#3f7fd6 100%);
@@ -868,7 +887,7 @@ button{-webkit-appearance:none;appearance:none}
   <div class="header-row1">
     <img src="usdc.svg" alt="" class="header-coin"/>
     <div class="logo logo-center">
-      <div style="font-size:1.15rem;font-weight:800;letter-spacing:-.01em">Financial discipline tool</div>
+      <div style="font-size:1rem;font-weight:800;letter-spacing:-.01em">Time-Locked<img src="lockey2.png" alt="" style="width:26px;height:26px;vertical-align:-5px;margin-left:6px"> Piggy bank</div>
       <div style="font-size:.60rem;color:var(--muted);font-weight:400">No more "just this once" withdrawals.</div>
     </div>
     <img src="usdt.svg" alt="" class="header-coin"/>
@@ -950,6 +969,12 @@ button{-webkit-appearance:none;appearance:none}
 </div>
 
 <div class="wrap">
+
+  <div class="hero" id="mainHero">
+    <h1>The financial discipline tool</h1>
+    <p>Lock USDC, USDT, or POL in a non‑custodial smart contract on the Polygon network for a fixed period you choose. Once locked, the funds can't be moved by anyone until the unlock date and time arrive. Only the beneficiary address you set can withdraw, and only after the lock ends.</p>
+  </div>
+
   <div class="tabs" id="tabBar">
     <button class="tab active" id="t-lock"   onclick="switchTab('lock',this)"><img src="lock.png" alt="" class="tab-icon"/> New Lock</button>
     <button class="tab" id="t-topup" onclick="switchTab('topup',this)"><img src="add.png" alt="" class="tab-icon"/> Top Up</button>
@@ -960,11 +985,6 @@ button{-webkit-appearance:none;appearance:none}
 
   <!-- ══════════════════ LOCK TAB ══════════════════ -->
   <div id="tab-lock" class="tab-content active">
-
-    <div class="hero">
-      <h1><img src="lockey.png" alt="" style="width:26px;height:26px;vertical-align:-5px;margin-left:6px"> Time lock Piggy bank<img src="lockey2.png" alt="" style="width:26px;height:26px;vertical-align:-5px;margin-right:6px"></h1>
-      <p>Lock a USDC or USDT amount in a smart contract on Polygon Network until a set date. No one can withdraw before the period ends.</p>
-    </div>
 
     <!-- STEP 1: WALLET + PARAMS -->
     <div id="lockStep1">
@@ -992,7 +1012,7 @@ button{-webkit-appearance:none;appearance:none}
             </div>
             <div class="wallet-connect-option" data-wallet="binance">
               <button type="button" class="wallet-connect-square" onclick="connectWallet('binance', this)"><img src="binance.png" alt="Binance Wallet" class="wcs-icon"></button>
-              <span class="wcs-caption">Binance</span>
+              <span class="wcs-caption">Binance *</span>
             </div>
           </div>
           <button type="button" class="wallet-connect-square" id="lockConnectBtn" style="display:none" onclick="disconnectWallet()"><img src="metamask.png" alt="Wallet" class="wcs-icon" id="lockConnectIcon"></button>
@@ -1032,7 +1052,7 @@ button{-webkit-appearance:none;appearance:none}
           </div>
         </div>
         <div style="font-size:.62rem;color:var(--muted);text-align:center;margin-top:8px;line-height:1.5">
-           Choose your Wallet App and complete all steps in its Browser or extension.
+           Choose your Wallet App and complete all steps in its Browser or extension.<br/>* to use Binance Wallet, open this page on its browser.
         </div>
       </div>
 
@@ -1226,22 +1246,28 @@ button{-webkit-appearance:none;appearance:none}
 
       <label class="watch-row-label"><img src="usdc.svg" alt="" class="tab-icon"/> USDC Beneficiary Address</label>
       <div class="watch-row">
-        <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToTopupRow('usdc')"><img src="pst.png" alt="Paste"></button>
-        <input type="text" id="topupContractAddr_usdc" placeholder="0x..." style="direction:ltr" oninput="onTopupRowInput('usdc')"/>
+        <div class="watch-input-wrap">
+          <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToTopupRow('usdc')"><img src="pst.png" alt="Paste"></button>
+          <input type="text" id="topupContractAddr_usdc" placeholder="0x..." style="direction:ltr" oninput="onTopupRowInput('usdc')"/>
+        </div>
         <div class="wr-tip-col"><span class="wr-tip-label">Chip in</span><button type="button" class="wr-icon-btn" title="Tip me in USDC" onclick="tipToTopupRow('usdc')"><img src="tip.png" alt="Tip"></button></div>
       </div>
 
       <label class="watch-row-label" style="margin-top:12px"><img src="usdt.svg" alt="" class="tab-icon"/> USDT Beneficiary Address</label>
       <div class="watch-row">
-        <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToTopupRow('usdt')"><img src="paste2.png" alt="Paste"></button>
-        <input type="text" id="topupContractAddr_usdt" placeholder="0x..." style="direction:ltr" oninput="onTopupRowInput('usdt')"/>
+        <div class="watch-input-wrap">
+          <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToTopupRow('usdt')"><img src="paste2.png" alt="Paste"></button>
+          <input type="text" id="topupContractAddr_usdt" placeholder="0x..." style="direction:ltr" oninput="onTopupRowInput('usdt')"/>
+        </div>
         <div class="wr-tip-col"><span class="wr-tip-label">Chip in</span><button type="button" class="wr-icon-btn" title="Tip me in USDT" onclick="tipToTopupRow('usdt')"><img src="tip2.png" alt="Tip"></button></div>
       </div>
 
       <label class="watch-row-label" style="margin-top:12px"><img src="matic.svg" alt="" class="tab-icon"/> POL Beneficiary Address</label>
       <div class="watch-row">
-        <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToTopupRow('pol')"><img src="pst3.png" alt="Paste"></button>
-        <input type="text" id="topupContractAddr_pol" placeholder="0x..." style="direction:ltr" oninput="onTopupRowInput('pol')"/>
+        <div class="watch-input-wrap">
+          <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToTopupRow('pol')"><img src="pst3.png" alt="Paste"></button>
+          <input type="text" id="topupContractAddr_pol" placeholder="0x..." style="direction:ltr" oninput="onTopupRowInput('pol')"/>
+        </div>
         <div class="wr-tip-col"><span class="wr-tip-label">Chip in</span><button type="button" class="wr-icon-btn" title="Tip me in POL" onclick="tipToTopupRow('pol')"><img src="tip3.png" alt="Tip"></button></div>
       </div>
 
@@ -1415,22 +1441,28 @@ button{-webkit-appearance:none;appearance:none}
 
       <label class="watch-row-label"><img src="usdc.svg" alt="" class="tab-icon"/> USDC Beneficiary Address</label>
       <div class="watch-row">
-        <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToWatchRow('usdc')"><img src="pst.png" alt="Paste"></button>
-        <input type="text" id="watchContractAddr_usdc" placeholder="0x..." style="direction:ltr" oninput="onWatchRowInput('usdc')"/>
+        <div class="watch-input-wrap">
+          <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToWatchRow('usdc')"><img src="pst.png" alt="Paste"></button>
+          <input type="text" id="watchContractAddr_usdc" placeholder="0x..." style="direction:ltr" oninput="onWatchRowInput('usdc')"/>
+        </div>
         <div class="wr-tip-col"><span class="wr-tip-label">Chip in</span><button type="button" class="wr-icon-btn" title="Tip me in USDC" onclick="tipToWatchRow('usdc')"><img src="tip.png" alt="Tip"></button></div>
       </div>
 
       <label class="watch-row-label" style="margin-top:12px"><img src="usdt.svg" alt="" class="tab-icon"/> USDT Beneficiary Address</label>
       <div class="watch-row">
-        <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToWatchRow('usdt')"><img src="paste2.png" alt="Paste"></button>
-        <input type="text" id="watchContractAddr_usdt" placeholder="0x..." style="direction:ltr" oninput="onWatchRowInput('usdt')"/>
+        <div class="watch-input-wrap">
+          <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToWatchRow('usdt')"><img src="paste2.png" alt="Paste"></button>
+          <input type="text" id="watchContractAddr_usdt" placeholder="0x..." style="direction:ltr" oninput="onWatchRowInput('usdt')"/>
+        </div>
         <div class="wr-tip-col"><span class="wr-tip-label">Chip in</span><button type="button" class="wr-icon-btn" title="Tip me in USDT" onclick="tipToWatchRow('usdt')"><img src="tip2.png" alt="Tip"></button></div>
       </div>
 
       <label class="watch-row-label" style="margin-top:12px"><img src="matic.svg" alt="" class="tab-icon"/> POL Beneficiary Address</label>
       <div class="watch-row">
-        <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToWatchRow('pol')"><img src="pst3.png" alt="Paste"></button>
-        <input type="text" id="watchContractAddr_pol" placeholder="0x..." style="direction:ltr" oninput="onWatchRowInput('pol')"/>
+        <div class="watch-input-wrap">
+          <button type="button" class="wr-icon-btn" title="Paste" onclick="pasteToWatchRow('pol')"><img src="pst3.png" alt="Paste"></button>
+          <input type="text" id="watchContractAddr_pol" placeholder="0x..." style="direction:ltr" oninput="onWatchRowInput('pol')"/>
+        </div>
         <div class="wr-tip-col"><span class="wr-tip-label">Chip in</span><button type="button" class="wr-icon-btn" title="Tip me in POL" onclick="tipToWatchRow('pol')"><img src="tip3.png" alt="Tip"></button></div>
       </div>
 
@@ -1445,9 +1477,10 @@ button{-webkit-appearance:none;appearance:none}
     </div>
   </div>
 
-  <div style="padding:7px 10px;margin:6px 4px 0;font-size:.65rem;color:var(--muted);line-height:1.5;text-align:center">
-    <h3>Don't trust, Verify.<img src="eye.png" alt="" style="width:15px;height:15px;vertical-align:-5px;margin-left:6px"/> </h3>
-     Review and verify the smart contracts used in this tool: USDC & USDT <a href="https://polygonscan.com/address/0x971023785d5477fb0c5b85686b00c4b9ca588b5d#code#F1#L1" target="_blank" rel="noopener" style="color:var(--accent2)">[here]</a>, POL <a href="https://polygonscan.com/address/0xb8120460c1b43a370566a784a549c2b0fabad989#code#F1#L1" target="_blank" rel="noopener" style="color:var(--accent2)">[here]</a>. You can also create your own tool via the GitHub repository without needing to use this website.
+  <div style="padding:7px 10px;margin:6px 4px 0;font-size:.66rem;color:var(--muted);line-height:1.5;text-align:center">
+    <h2>Don't trust, Verify.<img src="eye.png" alt="" style="width:15px;height:15px;vertical-align:-5px;margin-left:6px"/> </h2>
+     Review and verify the smart contracts used in this tool:<br/> USDC & USDT <a href="https://polygonscan.com/address/0x971023785d5477fb0c5b85686b00c4b9ca588b5d#code#F1#L1" target="_blank" rel="noopener" style="color:var(--accent2)">[here]</a>, POL <a href="https://polygonscan.com/address/0xb8120460c1b43a370566a784a549c2b0fabad989#code#F1#L1" target="_blank" rel="noopener" style="color:var(--accent2)">[here]</a>. You can also create your own tool via the GitHub repository.
+     <br/>⚠️ To add balance to your lock, use "TopUp" tab, Never add any amount to a smart contract address as a normal transaction from your wallet or Exchange.
   </div>
 
   <div class="social-circle-row">
@@ -1457,9 +1490,10 @@ button{-webkit-appearance:none;appearance:none}
   </div>
 
   <div style="text-align:center;margin:20px 4px 10px;font-size:.66rem;color:var(--muted);line-height:1.6">
+    <div> <strong style="color:var(--muted2)">Donate</strong> on the "Chip in" buttons.</div>
     <div>Fully open source code on <a href="https://github.com/Ouhly10/USDTIMELOCK" target="_blank" rel="noopener" style="color:var(--accent2)">GitHub</a></div>
     <div>&copy; Copyright 2026</div>
-    <div>don't forget to <strong style="color:var(--muted2)">Donate</strong> on the "Chip in" buttons.<br/>Free to use for personal and non-commercial purposes only.</div>
+    <div>Free to use for personal and non-commercial purposes only.</div>
   </div>
 
 </div><!-- /wrap -->
@@ -1468,6 +1502,49 @@ button{-webkit-appearance:none;appearance:none}
 <script src="https://cdnjs.cloudflare.com/ajax/libs/ethers/6.17.0/ethers.umd.min.js"></script>
 
 <script>
+
+// ─────────────────────────────────────────────
+//  ADDRESS PILL AUTO-FIT — shrinks font-size so a full address always
+//  fits on a single line inside its rounded pill, no matter the text
+//  length or screen width. Runs on load, on resize, and whenever any
+//  .addr-pill's content changes (via MutationObserver).
+// ─────────────────────────────────────────────
+const ADDR_PILL_MAX_FONT = 0.84; // rem
+const ADDR_PILL_MIN_FONT = 0.42; // rem
+function fitAddrPillText(el) {
+  if (!el) return;
+  let font = ADDR_PILL_MAX_FONT;
+  el.style.fontSize = font + 'rem';
+  // shrink in small steps until the text no longer overflows the pill
+  while (el.scrollWidth > el.clientWidth && font > ADDR_PILL_MIN_FONT) {
+    font -= 0.02;
+    el.style.fontSize = font.toFixed(2) + 'rem';
+  }
+}
+function fitAllAddrPills() {
+  document.querySelectorAll('.addr-pill').forEach(fitAddrPillText);
+}
+window.addEventListener('load', () => requestAnimationFrame(fitAllAddrPills));
+let addrPillResizeT;
+window.addEventListener('resize', () => {
+  clearTimeout(addrPillResizeT);
+  addrPillResizeT = setTimeout(fitAllAddrPills, 120);
+});
+const addrPillObserver = new MutationObserver((muts) => {
+  let need = false;
+  for (const m of muts) {
+    if (m.target.nodeType === 1 && m.target.classList && m.target.classList.contains('addr-pill')) { need = true; break; }
+    if (m.type === 'childList') {
+      for (const n of m.addedNodes) {
+        if (n.nodeType !== 1) continue;
+        if ((n.classList && n.classList.contains('addr-pill')) || (n.querySelector && n.querySelector('.addr-pill'))) { need = true; break; }
+      }
+    }
+    if (need) break;
+  }
+  if (need) requestAnimationFrame(fitAllAddrPills);
+});
+addrPillObserver.observe(document.documentElement, { childList: true, subtree: true, characterData: true });
 
 // ─────────────────────────────────────────────
 //  CONFIG — Polygon
@@ -2426,17 +2503,17 @@ async function doLock() {
 
       <div style="margin-top:10px">
         <span style="font-size:.95rem;font-weight:800;color:var(--text)">Storage Address</span>
-        <div style="background:rgba(52,199,89,.12);border-radius:10px;padding:12px 14px;margin-top:6px">
+        <div class="addr-glass-box green">
           <div id="lockFinalContractAddr" style="font-family:'SF Mono',ui-monospace,monospace;font-size:.8rem;font-weight:800;color:var(--text);word-break:break-all;direction:ltr;text-align:left">${lockParams.contract}</div>
         </div>
 
         <span style="font-size:.95rem;font-weight:800;color:var(--text);margin-top:10px;display:block">Beneficiary Address</span>
-        <div style="background:rgba(0,122,255,.12);border-radius:10px;padding:12px 14px;margin-top:6px">
+        <div class="addr-glass-box blue">
           <div id="lockFinalBeneAddr" style="font-family:'SF Mono',ui-monospace,monospace;font-size:.8rem;font-weight:800;color:var(--text);word-break:break-all;direction:ltr;text-align:left">${lockParams.bene}</div>
         </div>
 
         <div style="background:rgba(255,204,0,.15);border-radius:10px;padding:10px 12px;margin-top:8px;font-size:.75rem;font-weight:700;color:var(--alert-warn-text,#b96400);line-height:1.6;text-align:center">
-          ✅ All done.<br/>Read the ⚠️ Warning at the bottom.
+          <h1><img src="eye2.png" alt="" style="width:20px;height:20px;vertical-align:-5px;margin-left:6px"/>  All done </h1>
         </div>
       </div>`;
     setStep(4);
@@ -3106,6 +3183,8 @@ function switchTab(name, btn) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.getElementById('tab-' + name).classList.add('active');
   btn.classList.add('active');
+  const mainHero = document.getElementById('mainHero');
+  if (mainHero) mainHero.style.display = (name === 'lock') ? '' : 'none';
   // Same scroll-position issue as between lock steps: switching to a shorter tab can leave
   // the page scrolled below its new height. Bring the tab bar back into view every time.
   scrollElementToTop('tabBar');
